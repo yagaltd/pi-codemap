@@ -30,6 +30,7 @@ CONFIGS = {
     "baseline": [],
     "v1": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v1")],
     "v2": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v2")],
+    "v11": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v11")],
 }
 
 
@@ -148,11 +149,32 @@ def validate(task, clone, events, raw):
         return (not missing), f"missing: {missing}" if missing else "all answers present"
     if v["type"] == "precise_edit":
         return validate_precise_edit(v, clone)
+    if v["type"] == "jev_log":
+        return validate_jev_log(v, clone)
     if v["type"] == "answer_contains":
+        ok, why = True, ""
         text = final_text(events, raw)
         missing = [n for n in v["needles"] if n not in text]
-        return (not missing), f"missing: {missing}" if missing else "ok"
+        if missing:
+            return False, f"missing: {missing}"
+        if v.get("log_expect"):
+            return validate_jev_log({"expect": v["log_expect"]}, clone)
+        return True, "ok"
     return False, "unknown validator"
+
+
+def validate_jev_log(v, clone):
+    """v1.1: the extension's decision log must contain every expected event.
+    A missing log = the jev feature never ran (configs without it fail here
+    by design — the contrast is the point)."""
+    log_path = os.path.join(clone, ".codemap-jev.log")
+    if not os.path.exists(log_path):
+        return False, "no .codemap-jev.log (jev add-on absent or never decided)"
+    lines = [json.loads(l) for l in open(log_path) if l.strip()]
+    for expect in v["expect"]:
+        if not any(all(e.get(k) == val for k, val in expect.items()) for e in lines):
+            return False, f"log has no event matching {expect}; got {lines}"
+    return True, f"log ok ({len(lines)} events)"
 
 
 def validate_precise_edit(v, clone):

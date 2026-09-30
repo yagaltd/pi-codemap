@@ -26,6 +26,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
+import { gateShortlist, gateTriggered, routeFirstPrompt, type GateCandidate } from "./jev.ts";
 
 const SNAPSHOT_BUDGET = 2500;
 const IDLE_TTL_MS = 5 * 60 * 1000;
@@ -45,6 +46,9 @@ interface State {
 	snapshotMeta: { files: number; omitted: number; estTokens: number };
 	lastServedMs: number;
 	filesIndexed: number;
+	/** v1.1 router: decided once per session (first agent start). */
+	jevRouterDecided?: boolean;
+	jevRouterSkipped?: boolean;
 }
 
 function sh(cmd: string, args: string[], opts: { cwd?: string; timeout?: number } = {}): {
@@ -97,6 +101,7 @@ function init(st: State, ctx: ExtensionContext): void {
 	}
 	st.filesIndexed = countLines(st.mapPath);
 	renderSnapshot(st);
+	st.enabled = true; // BUGFIX: was never set — snapshot injection silently no-oped in all prior runs (tools still worked, so the bench never caught it)
 
 	// Watcher = change signal. Killed on session_shutdown; failure degrades
 	// to refresh-on-expiry (correct, just less fresh).
@@ -284,6 +289,8 @@ export function editSymbol(
 
 export interface CodemapOptions {
 	editTool?: boolean;
+	/** v1.1: Jev router (map injection) + low-confidence search gate. */
+	jev?: boolean;
 }
 
 export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): void {
@@ -298,6 +305,16 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		filesIndexed: 0,
 	};
 
+	function jevLog(e: Record<string, unknown>): void {
+		if (process.env.CODEMAP_JEV_LOG) {
+			try {
+				fs.appendFileSync(path.join(st.cwd, ".codemap-jev.log"), JSON.stringify(e) + "\n");
+			} catch {
+				/* logging never breaks the request path */
+			}
+		}
+	}
+
 	pi.on("session_start", (_event, ctx) => {
 		init(st, ctx);
 		if (st.enabled && ctx.hasUI) {
@@ -307,8 +324,18 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		}
 	});
 
-	pi.on("before_agent_start", (event) => {
+	pi.on("before_agent_start", async (event) => {
 		if (!st.enabled || !st.snapshot) return;
+		// v1.1 router: decide ONCE per session whether this session gets the
+		// map at all. Default inject; skip only on confident non-code. The
+		// decision is cached — a mid-session injection would re-pay the
+		// provider cache write at the worst moment.
+		if (opts.jev && !st.jevRouterDecided) {
+			st.jevRouterDecided = true;
+			const d = await routeFirstPrompt(event.prompt, jevLog);
+			st.jevRouterSkipped = d === "skip";
+		}
+		if (opts.jev && st.jevRouterSkipped) return;
 		ensureFresh(st, Date.now());
 		// Structured section mutation — NOT a systemPrompt override. Overriding
 		// the rendered text forces providers down the full-transcript path and
@@ -335,13 +362,35 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			const q = String((params as { query: string }).query);
 			const limit = Math.min(30, Math.max(1, Number((params as { limit?: number }).limit ?? 10)));
 			const hits = runSearch(st, q, limit);
+			// v1.1 gate: only doubtful shortlists pay a Jev call. Confident
+			// searches return untouched. Re-rank by judged relevance; never
+			// return fewer than 3 hits (gate failure = original order).
+			let gated: typeof hits = [];
+			if (opts.jev && gateTriggered(hits.map((h) => h.score))) {
+				const cands: GateCandidate[] = hits.slice(0, 8).map((h) => ({ name: h.name, path: h.path, kind: h.kind, score: h.score }));
+				const rel = await gateShortlist(q, cands, jevLog);
+				if (rel) {
+					gated = hits
+						.slice(0, cands.length)
+						.map((h, i) => ({ hit: h, p: rel[i] }))
+						.sort((a, b) => b.p - a.p || b.hit.score - a.hit.score)
+						.map((x) => ({ ...x.hit, score: x.hit.score, jev: x.p }));
+					if (gated.every((g) => (g.jev ?? 0) < 0.5)) {
+						gated = hits.slice(0, 3); // all doubted — keep engine order, top 3
+					}
+				}
+			}
+			const shown = gated.length > 0 ? gated : hits;
 			const content =
-				hits.length === 0
+				shown.length === 0
 					? `no map hits for '${q}'`
-					: hits
-							.map((h) => `${h.score.toFixed(3)} ${h.path}:${h.line} ${h.kind} ${h.name} (~${h.tokens_est}tok)`)
+					: shown
+							.map((h) => {
+								const mark = (h as { jev?: number }).jev !== undefined ? ` [jev:${(h as { jev: number }).jev.toFixed(2)}]` : "";
+								return `${h.score.toFixed(3)}${mark} ${h.path}:${h.line} ${h.kind} ${h.name} (~${h.tokens_est}tok)`;
+							})
 							.join("\n");
-			return { content, details: { hits } };
+			return { content, details: { hits: shown } };
 		},
 	});
 
