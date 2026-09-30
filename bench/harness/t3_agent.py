@@ -346,6 +346,9 @@ def main():
                 raw_path = os.path.join(C.WORK, "raw", f"{t['id']}-{cfg_name}-{rep}.jsonl")
                 with open(raw_path, "w") as f:
                     f.write(r.stdout)
+                if r.stderr:
+                    with open(raw_path + ".err", "w") as f:
+                        f.write(r.stderr)
                 events = walk_events(r.stdout)
                 metrics = extract_metrics(events, r.stdout)
                 codemap_tools = sorted({
@@ -358,6 +361,7 @@ def main():
                 jev_events = []
                 if os.path.exists(jev_path):
                     jev_events = [json.loads(l) for l in open(jev_path) if l.strip()]
+                    shutil.copy(jev_path, raw_path + ".jevlog")
                 row = {
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
                     "repeat": rep, "success": ok, "why": why, "raw": raw_path,
@@ -370,7 +374,8 @@ def main():
                       f"in={metrics['tokens_in']} out={metrics['tokens_out']} "
                       f"tools={metrics['tool_calls']} turns={metrics['turns']} "
                       f"codemap={'yes' if codemap_tools else 'no'}  {why}")
-                shutil.rmtree(clone, ignore_errors=True)
+                if not os.environ.get("KEEP_CLONE"):
+                    shutil.rmtree(clone, ignore_errors=True)
 
     # Per-config files (never overwritten by another config's run) + merged.
     with open(os.path.join(C.RESULTS, f"t3_{suite}_{cfg_name}.json"), "w") as f:
@@ -393,7 +398,8 @@ def main():
         if os.path.exists(spath):
             try:
                 old_rows = json.load(open(spath)).get("rows", [])
-                sm["rows"] = old_rows + [r for r in rows if (r["id"], r["config"], r["repeat"]) not in {(o["id"], o["config"], o["repeat"]) for o in old_rows}]
+                new_keys = {(r["id"], r["config"], r["repeat"]) for r in rows}
+                sm["rows"] = rows + [o for o in old_rows if (o["id"], o["config"], o["repeat"]) not in new_keys]
             except json.JSONDecodeError:
                 pass
         with open(spath, "w") as f:

@@ -26,7 +26,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { gateShortlist, gateTriggered, routeFirstPrompt, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
+import { classifySpan, gateShortlist, gateTriggered, routeFirstPrompt, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
 import { keySituation, storeApiKey } from "./credentials.ts";
 import { promptForApiKey } from "./key-prompt.ts";
 
@@ -82,10 +82,22 @@ function has(bin: string): boolean {
 	}
 }
 
-// ── lifecycle ─────────────────────────────────────────────────────────────
+// ── lifecycle ─────────────────────────────────────────────────────────
+
+/** Load-probe: independent of st/opts — proves this extension instance loaded. */
+function jevLogProbe(cwd: string, e: Record<string, unknown>): void {
+	if (process.env.CODEMAP_JEV_LOG) {
+		try {
+			fs.appendFileSync(path.join(cwd, ".codemap-jev.log"), JSON.stringify(e) + "\n");
+		} catch {
+			/* ignore */
+		}
+	}
+}
 
 function init(st: State, ctx: ExtensionContext): void {
 	st.cwd = ctx.cwd;
+	jevLogProbe(ctx.cwd, { event: "ext_loaded", cwd: ctx.cwd });
 	if (!has("code-parser") || !has("code-map")) {
 		st.enabled = false;
 		st.reason = "install: cargo install --git https://github.com/yagaltd/code-parser code-parser-cli --features all && cargo install --path crates/code-map --features all";
@@ -711,12 +723,18 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				required: ["path", "edits"],
 			} as never,
 			execute: async (_id, params) => {
+				jevLog({ event: "edit_called" });
+				try {
 				const p = params as { path: string; edits: EditOp[] };
 				if (!Array.isArray(p.edits) || p.edits.length === 0)
 					return { content: "refused: edits[] must contain at least one {oldText, newText}" };
 				const r = runGuardedEdit(st, p.path, p.edits, jevLog);
 				st.mapDirty = true;
 				return { content: r.ok ? r.detail : `refused: ${r.detail}` };
+				} catch (e) {
+					jevLog({ event: "edit_guard", decision: "crashed", error: String(e).slice(0, 160) });
+					return { content: `refused: codemap edit guard crashed (${String(e).slice(0, 80)}) — use bash for this edit and report it` };
+				}
 			},
 		});
 	}
