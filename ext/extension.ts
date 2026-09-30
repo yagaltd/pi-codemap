@@ -84,6 +84,9 @@ function has(bin: string): boolean {
 // ── lifecycle ─────────────────────────────────────────────────────────
 
 /** Load-probe: independent of st/opts — proves this extension instance loaded. */
+/** Factory-scoped wiring, reachable from module-scope init(). */
+let moduleWireClassifier: ((ctx: ExtensionContext) => void) | null = null;
+
 function jevLogProbe(cwd: string, e: Record<string, unknown>): void {
 	if (process.env.CODEMAP_JEV_LOG) {
 		try {
@@ -97,6 +100,7 @@ function jevLogProbe(cwd: string, e: Record<string, unknown>): void {
 function init(st: State, ctx: ExtensionContext): void {
 	st.cwd = ctx.cwd;
 	jevLogProbe(ctx.cwd, { event: "ext_loaded", cwd: ctx.cwd });
+	moduleWireClassifier?.(ctx);
 	if (!has("code-parser") || !has("code-map")) {
 		st.enabled = false;
 		st.reason = "install: cargo install --git https://github.com/yagaltd/code-parser code-parser-cli --features all && cargo install --path crates/code-map --features all";
@@ -463,6 +467,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			if (!model) throw new Error("no classifier model with usable credentials");
 			return reg.classify(model, { state, questions }) as Promise<never> as never;
 		});
+		moduleWireClassifier = wireClassifier;
 	}
 
 	function jevLog(e: Record<string, unknown>): void {
@@ -475,7 +480,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		}
 	}
 
-	pi.on("session_start", (_event, ctx) => {
+	pi.on("session_start", async (_event, ctx) => {
 		init(st, ctx);
 		if (st.enabled && ctx.hasUI) {
 			ctx.ui.setStatus("codemap", `map ${st.filesIndexed}f · snap ${st.snapshotMeta.estTokens}tok`);
@@ -483,12 +488,23 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			ctx.ui.setStatus("codemap", `codemap off (${(st.reason ?? "").slice(0, 40)})`);
 		}
 		// Onboarding (pi-typesafe pattern): say it once, never force a modal.
-		if (opts.jev && st.enabled && ctx.hasUI && !onboardedKeyMissing && !hasClassifier()) {
+		if (opts.jev && st.enabled && ctx.hasUI && !onboardedKeyMissing) {
 			onboardedKeyMissing = true;
-			ctx.ui.notify(
-				"pi-codemap: Jev router/gate idle — no classifier credentials. Set TYPESAFE_API_KEY in the environment that starts pi (or /login via a Jev reseller). Everything else works without it.",
-				"warning",
-			);
+			const reg = (ctx as unknown as { modelRegistry?: { getAvailableOfType(t: string): Promise<readonly unknown[]> } }).modelRegistry;
+			let available = hasClassifier();
+			if (!available && reg) {
+				try {
+					available = (await reg.getAvailableOfType("classifier")).length > 0;
+				} catch {
+					/* treat as unavailable */
+				}
+			}
+			if (!available) {
+				ctx.ui.notify(
+					"pi-codemap: Jev router/gate idle — no classifier credentials. Set TYPESAFE_API_KEY in the environment that starts pi, or /login with a Jev provider (OpenRouter, Cloudflare, Vercel, opencode). Everything else works without it.",
+					"warning",
+				);
+			}
 		}
 	});
 
