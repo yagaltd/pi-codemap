@@ -1,0 +1,41 @@
+{
+ "tier": "t3",
+ "suite": "edit",
+ "config": "v12",
+ "rows": [
+  {
+   "id": "emp-multi",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 0,
+   "success": true,
+   "why": "precise (symbol L367-385, single file)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multi-v12-0.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/tools/project.ts",
+     "edits": 2,
+     "symbols": [
+      "detectJsPm L367-385",
+      "detectJsPm L367-385"
+     ]
+    }
+   ],
+   "wall_s": 48.8,
+   "tokens_in": 2195,
+   "req1_in": 7,
+   "in_steady": 2188,
+   "tokens_out": 1042,
+   "cache_read": 52928,
+   "cache_write": 0,
+   "turns": 7,
+   "tool_calls": 6,
+   "files_read": 1,
+   "model": "glm-5.3"
+  }
+ ]
+}

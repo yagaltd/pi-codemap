@@ -183,7 +183,7 @@ def validate_precise_edit(v, clone):
     file changed, and every diff hunk confined to the target symbol's line
     range in the ORIGINAL file (±3 lines for doc-comment attachment)."""
     file, symbol = v["file"], v["symbol"]
-    needles = v.get("needles", [v["needle"]])
+    needles = v.get("needles") or [v["needle"]]
     target = os.path.join(clone, file)
     try:
         content = open(target, encoding="utf-8", errors="replace").read()
@@ -333,6 +333,17 @@ def main():
     if suite == "agent":
         with open(path, "w") as f:
             json.dump(merged, f, indent=1)
+    else:
+        spath = os.path.join(C.RESULTS, f"t3_{suite}.json")
+        sm = {"tier": "t3", "suite": suite, "rows": rows}
+        if os.path.exists(spath):
+            try:
+                old_rows = json.load(open(spath)).get("rows", [])
+                sm["rows"] = old_rows + [r for r in rows if (r["id"], r["config"], r["repeat"]) not in {(o["id"], o["config"], o["repeat"]) for o in old_rows}]
+            except json.JSONDecodeError:
+                pass
+        with open(spath, "w") as f:
+            json.dump(sm, f, indent=1)
     # Summary per config.
     for cfg in configs:
         rs = [r for r in rows if r["config"] == cfg]
