@@ -287,12 +287,155 @@ export function editSymbol(
 	};
 }
 
+// ── v12: guarded edit override ──────────────────────────────────────────
+
+interface EditOp {
+	oldText: string;
+	newText: string;
+}
+
+interface GuardPlanStep {
+	start: number;
+	end: number;
+	newText: string;
+	symName?: string;
+	symStart?: number;
+	symEnd?: number;
+	newStartLine: number;
+	newEndLine: number;
+}
+
+function countLinesStr(s: string): number {
+	return s.length === 0 ? 0 : s.split("\n").length;
+}
+
+function lineOfIndex(s: string, index: number): number {
+	let line = 0;
+	for (let i = 0; i < index; i++) if (s.charCodeAt(i) === 10) line++;
+	return line;
+}
+
+function parseErrorsOf(absPath: string, suffix: string, content: string): number | null {
+	const tmp = path.join(os.tmpdir(), `cm-guard-${crypto.randomBytes(6).toString("hex")}${suffix}`);
+	try {
+		fs.writeFileSync(tmp, content);
+		const r = sh("code-parser", ["parse", tmp, "--json"], { timeout: 30_000 });
+		if (!r.ok) return null;
+		const d = JSON.parse(r.stdout);
+		return (d.diagnostics ?? []).filter((x: { severity: string }) => x.severity === "Error").length;
+	} catch {
+		return null;
+	} finally {
+		try {
+			fs.unlinkSync(tmp);
+		} catch {
+			/* tmp cleanup best-effort */
+		}
+	}
+}
+
+/**
+ * v12 guarded edit: native oldText/newText semantics (exact, unique,
+ * matched against the ORIGINAL content, non-overlapping) plus two guards,
+ * validate-then-write so a refused call never touches the file:
+ *  1. parse-safety — the edited file must not gain parse errors;
+ *  2. symbol containment — when an edit lands inside one symbol, the
+ *     replacement must stay within that symbol's original range (+-3 lines
+ *     for doc-comment attachment).
+ */
+export function runGuardedEdit(
+	st: State,
+	path_: string,
+	edits: EditOp[],
+	jevLog: (e: Record<string, unknown>) => void,
+): { ok: boolean; detail: string } {
+	const abs = path.isAbsolute(path_) ? path_ : path.join(st.cwd, path_);
+	if (!fs.existsSync(abs)) return { ok: false, detail: `file not found: ${path_}` };
+	const original = fs.readFileSync(abs, "utf8");
+	const suffix = path.extname(abs);
+	const errorsBefore = parseErrorsOf(abs, suffix, original);
+
+	// Locate every edit in the ORIGINAL content; reject 0 / >1 occurrences.
+	const spans: { start: number; end: number; newText: string; op: EditOp }[] = [];
+	for (const op of edits) {
+		const first = original.indexOf(op.oldText);
+		if (first === -1) return { ok: false, detail: `oldText not found in ${path_}: ${JSON.stringify(op.oldText.slice(0, 60))}` };
+		const second = original.indexOf(op.oldText, first + 1);
+		if (second !== -1) return { ok: false, detail: `Found ${original.split(op.oldText).length - 1} occurrences in ${path_}. oldText must be unique — provide more context.` };
+		spans.push({ start: first, end: first + op.oldText.length, newText: op.newText, op });
+	}
+	spans.sort((a, b) => a.start - b.start);
+	for (let i = 1; i < spans.length; i++) {
+		if (spans[i].start < spans[i - 1].end)
+			return { ok: false, detail: "edits[] overlap — merge them into one edit" };
+	}
+
+	// Parse once for symbol containment.
+	let symbols: { name: string; start_line: number; end_line: number }[] = [];
+	try {
+		const r = sh("code-parser", ["parse", abs, "--json"], { timeout: 30_000 });
+		if (r.ok) symbols = JSON.parse(r.stdout).symbols ?? [];
+	} catch {
+		/* no symbols → containment checks skip */
+	}
+
+	// Plan: containment + new-line accounting (all before any write).
+	const plan: GuardPlanStep[] = [];
+	let deltaLines = 0;
+	for (const s of spans) {
+		const oldStartLine = lineOfIndex(original, s.start);
+		const oldEndLine = oldStartLine + countLinesStr(s.op.oldText) - 1;
+		const newStartLine = oldStartLine + deltaLines;
+		const newEndLine = newStartLine + countLinesStr(s.newText) - 1;
+		deltaLines += countLinesStr(s.newText) - countLinesStr(s.op.oldText);
+		const innermost = symbols
+			.filter((sym) => oldStartLine + 1 >= sym.start_line && oldEndLine + 1 <= sym.end_line)
+			.sort((a, b) => a.end_line - a.start_line - (b.end_line - b.start_line))[0];
+		if (innermost) {
+			const lo = innermost.start_line - 3;
+			const hi = innermost.end_line + 3;
+			if (newStartLine + 1 < lo || newEndLine + 1 > hi) {
+				jevLog({ event: "edit_guard", decision: "refused_range", file: path_, symbol: innermost.name, range: [newStartLine + 1, newEndLine + 1], allowed: [lo, hi] });
+				return { ok: false, detail: `edit escapes symbol '${innermost.name}' (L${innermost.start_line}-${innermost.end_line}): replacement spans L${newStartLine + 1}-${newEndLine + 1}, allowed L${lo}-${hi}. Narrow the edit or use write for whole-file changes.` };
+			}
+			plan.push({ start: s.start, end: s.end, newText: s.newText, symName: innermost.name, symStart: innermost.start_line, symEnd: innermost.end_line, newStartLine, newEndLine });
+		} else {
+			plan.push({ start: s.start, end: s.end, newText: s.newText, newStartLine, newEndLine });
+		}
+	}
+
+	// Apply on the string (last→first keeps indices valid).
+	let updated = original;
+	for (let i = plan.length - 1; i >= 0; i--) {
+		const p = plan[i];
+		updated = updated.slice(0, p.start) + p.newText + updated.slice(p.end);
+	}
+
+	// Parse-safety on the RESULT before writing.
+	if (errorsBefore !== null) {
+		const errorsAfter = parseErrorsOf(abs, suffix, updated);
+		if (errorsAfter !== null && errorsAfter > errorsBefore) {
+			jevLog({ event: "edit_guard", decision: "refused_parse", file: path_, errorsBefore, errorsAfter });
+			return { ok: false, detail: `edit introduces ${errorsAfter - errorsBefore} parse error(s) — nothing was written. Fix the oldText/newText and retry.` };
+		}
+	}
+
+	fs.writeFileSync(abs, updated);
+	const syms = plan.filter((p) => p.symName).map((p) => `${p.symName} L${p.symStart}-${p.symEnd}`);
+	jevLog({ event: "edit_guard", decision: "applied", file: path_, edits: plan.length, symbols: syms });
+	const where = syms.length > 0 ? ` inside ${syms.join(", ")}` : "";
+	return { ok: true, detail: `Applied ${plan.length} edit(s) to ${path_}${where} (now L${plan[0].newStartLine + 1}-${plan[plan.length - 1].newEndLine + 1}); parses clean` };
+}
+
 // ── extension factory ─────────────────────────────────────────────────────
 
 export interface CodemapOptions {
 	editTool?: boolean;
 	/** v1.1: Jev router (map injection) + low-confidence search gate. */
 	jev?: boolean;
+	/** v12: register `edit` — native oldText/newText semantics plus
+	 * validate-then-write guards (parse-safety + symbol-range containment). */
+	editOverride?: boolean;
 }
 
 export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): void {
@@ -534,6 +677,44 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				const r = editSymbol(st, p.symbol, p.new_text, p.file);
 				st.mapDirty = true; // our own edit changed the repo
 				return { content: r.ok ? `ok: ${r.detail}` : `refused: ${r.detail}`, details: r };
+			},
+		});
+	}
+
+	if (opts.editOverride) {
+		pi.registerTool({
+			name: "edit",
+			label: "Edit (codemap-guarded)",
+			description:
+				"Make precise file edits with exact text replacement, including multiple disjoint edits in one call. " +
+				"Edits are validated before anything is written: the result must still parse, and when an edit lands inside a code symbol " +
+				"the replacement must stay within that symbol's range — an escaping edit is refused with the file untouched.",
+			parameters: {
+				type: "object",
+				properties: {
+					path: { type: "string", description: "Path to the file to edit (relative or absolute)" },
+					edits: {
+						type: "array",
+						description: "One or more targeted replacements, matched against the original file (not incrementally). No overlapping edits.",
+						items: {
+							type: "object",
+							properties: {
+								oldText: { type: "string", description: "Exact text for one targeted replacement; must be unique in the file" },
+								newText: { type: "string", description: "Replacement text for this targeted edit" },
+							},
+							required: ["oldText", "newText"],
+						},
+					},
+				},
+				required: ["path", "edits"],
+			} as never,
+			execute: async (_id, params) => {
+				const p = params as { path: string; edits: EditOp[] };
+				if (!Array.isArray(p.edits) || p.edits.length === 0)
+					return { content: "refused: edits[] must contain at least one {oldText, newText}" };
+				const r = runGuardedEdit(st, p.path, p.edits, jevLog);
+				st.mapDirty = true;
+				return { content: r.ok ? r.detail : `refused: ${r.detail}` };
 			},
 		});
 	}

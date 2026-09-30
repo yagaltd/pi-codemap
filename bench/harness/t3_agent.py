@@ -31,6 +31,7 @@ CONFIGS = {
     "v1": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v1")],
     "v2": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v2")],
     "v11": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v11")],
+    "v12": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v12")],
 }
 
 
@@ -181,20 +182,23 @@ def validate_precise_edit(v, clone):
     """v1/v2 edit-precision contract: needle present, needle NEW, exactly one
     file changed, and every diff hunk confined to the target symbol's line
     range in the ORIGINAL file (±3 lines for doc-comment attachment)."""
-    file, needle, symbol = v["file"], v["needle"], v["symbol"]
+    file, symbol = v["file"], v["symbol"]
+    needles = v.get("needles", [v["needle"]])
     target = os.path.join(clone, file)
     try:
         content = open(target, encoding="utf-8", errors="replace").read()
     except OSError:
         return False, f"file missing: {file}"
-    if needle not in content:
-        return False, f"needle missing"
+    missing = [n for n in needles if n not in content]
+    if missing:
+        return False, f"needle missing: {missing}"
     pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{file}"],
                               capture_output=True, text=True)
     if pristine.returncode != 0:
         return False, "no pristine copy"
-    if needle in pristine.stdout:
-        return False, "DATASET BUG — needle pre-exists"
+    pre = [n for n in needles if n in pristine.stdout]
+    if pre:
+        return False, f"DATASET BUG — needles pre-exist: {pre}"
     changed = subprocess.run(["git", "-C", clone, "diff", "--name-only"],
                              capture_output=True, text=True).stdout.split()
     if changed != [file]:
@@ -296,10 +300,15 @@ def main():
                     and str(e.get("toolName", "")).startswith("codemap")
                 })
                 ok, why = validate(t, clone, events, r.stdout + r.stderr)
+                jev_path = os.path.join(clone, ".codemap-jev.log")
+                jev_events = []
+                if os.path.exists(jev_path):
+                    jev_events = [json.loads(l) for l in open(jev_path) if l.strip()]
                 row = {
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
                     "repeat": rep, "success": ok, "why": why, "raw": raw_path,
                     "codemap_tools": codemap_tools,
+                    "jev_events": jev_events,
                     "wall_s": wall, **metrics,
                 }
                 rows.append(row)
