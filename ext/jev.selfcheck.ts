@@ -4,7 +4,7 @@
  * their failure mode is fail-open and covered by the bench.)
  */
 import assert from "node:assert/strict";
-import { gateTriggered, isTrivialPrompt, redactSend } from "./jev.ts";
+import { gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
 
 // TRIVIAL_RE: high-precision only — these skip for free
 assert.equal(isTrivialPrompt("run the tests"), true);
@@ -32,5 +32,9 @@ assert.ok(redactSend("ghp_abcdefghijklmnopqrst").includes("[REDACTED]"));
 assert.ok(redactSend("AKIAIOSFODNN7EXAMPLE").includes("[REDACTED]"));
 // ordinary code must pass through untouched
 assert.equal(redactSend("const score = hits[0].score;"), "const score = hits[0].score;");
+
+// sub-query expansion for the rescue pass
+assert.deepEqual(subQueryTerms("Where is the genome — the persistent repository knowledge index — built?"), ["genome", "persistent", "repository", "knowledge"]);
+assert.deepEqual(subQueryTerms("the of and to"), [], "stopwords/short words only");
 
 console.log("jev.selfcheck: all assertions passed");

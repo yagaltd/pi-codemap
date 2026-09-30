@@ -126,6 +126,20 @@ export async function routeFirstPrompt(
 	return decision;
 }
 
+/** Content words of a query for local sub-query expansion (rescue pass).
+ * Stopwords stripped; words < 4 chars dropped; max 4 terms. */
+const STOPWORDS = new Set([
+	"where", "what", "which", "how", "does", "this", "that", "with", "from",
+	"used", "uses", "using", "built", "builds", "build", "need", "needs",
+	"find", "show", "give", "into", "onto", "about", "file", "files",
+]);
+
+export function subQueryTerms(query: string): string[] {
+	return [...new Set(
+		query.toLowerCase().replace(/[^a-z0-9_\s-]/g, " ").split(/\s+/),
+	)].filter((w) => w.length >= 4 && !STOPWORDS.has(w)).slice(0, 4);
+}
+
 // ── search gate ───────────────────────────────────────────────────────────
 
 export interface GateCandidate {

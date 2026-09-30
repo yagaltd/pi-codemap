@@ -26,7 +26,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { gateShortlist, gateTriggered, routeFirstPrompt, systemOne, type GateCandidate } from "./jev.ts";
+import { gateShortlist, gateTriggered, routeFirstPrompt, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
 import { keySituation, storeApiKey } from "./credentials.ts";
 import { promptForApiKey } from "./key-prompt.ts";
 
@@ -297,6 +297,8 @@ export interface CodemapOptions {
 
 export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): void {
 	let onboardedKeyMissing = false;
+	/** Failed-search rescue results, cached per query for this session. */
+	const rescueCache = new Map<string, SearchHit[]>();
 
 	const st: State = {
 		cwd: "",
@@ -412,6 +414,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			// searches return untouched. Re-rank by judged relevance; never
 			// return fewer than 3 hits (gate failure = original order).
 			let gated: typeof hits = [];
+			let gateAllDoubted = false;
 			if (opts.jev && gateTriggered(hits.map((h) => h.score))) {
 				try {
 				const cands: GateCandidate[] = hits.slice(0, 8).map((h) => ({ name: h.name, path: h.path, kind: h.kind, score: h.score }));
@@ -423,6 +426,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 						.sort((a, b) => b.p - a.p || b.hit.score - a.hit.score)
 						.map((x) => ({ ...x.hit, score: x.hit.score, jev: x.p }));
 					if (gated.every((g) => (g.jev ?? 0) < 0.5)) {
+						gateAllDoubted = true;
 						gated = hits.slice(0, 3); // all doubted — keep engine order, top 3
 					}
 				}
@@ -430,7 +434,40 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					jevLog({ event: "gate", decision: "unavailable", error: String(e).slice(0, 120) });
 				}
 			}
-			const shown = gated.length > 0 ? gated : hits;
+			let shown = gated.length > 0 ? gated : hits;
+			// v1.1 rescue: failed search (no hits, or gate fired and ALL candidates
+			// doubted). Local sub-query expansion, then one Jev relevance battery
+			// over the merged candidates. Fail-open to the original result.
+			if (opts.jev && !rescueCache.has(q) && (hits.length === 0 || (gateAllDoubted && shown.length > 0))) {
+				try {
+					const terms = subQueryTerms(q);
+					const merged = new Map<string, (typeof hits)[number]>();
+					for (const t of terms) {
+						for (const h of runSearch(st, t, 5)) {
+							const k = `${h.path}:${h.name}`;
+							if (!merged.has(k) || merged.get(k)!.score < h.score) merged.set(k, h);
+						}
+					}
+					const cands = [...merged.values()].slice(0, 8).map((h) => ({ name: h.name, path: h.path, kind: h.kind, score: h.score }));
+					const rel = cands.length > 0 ? await gateShortlist(q, cands, jevLog) : null;
+					if (rel) {
+						const rescued = [...merged.values()]
+							.slice(0, cands.length)
+							.map((h, i) => ({ hit: h, p: rel[i] }))
+							.filter((x) => x.p >= 0.5)
+							.sort((a, b) => b.p - a.p || b.hit.score - a.hit.score)
+							.slice(0, limit)
+							.map((x) => ({ ...x.hit, jev: x.p }));
+						jevLog({ event: "rescue", decision: rescued.length > 0 ? "fired" : "empty", terms, kept: rescued.length });
+						if (rescued.length > 0) {
+							shown = rescued;
+							rescueCache.set(q, rescued); // agents retry failed queries — pay once per session
+						}
+					}
+				} catch (e) {
+					jevLog({ event: "rescue", decision: "unavailable", error: String(e).slice(0, 120) });
+				}
+			}
 			const content =
 				shown.length === 0
 					? `no map hits for '${q}'`
