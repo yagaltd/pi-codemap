@@ -367,6 +367,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			// return fewer than 3 hits (gate failure = original order).
 			let gated: typeof hits = [];
 			if (opts.jev && gateTriggered(hits.map((h) => h.score))) {
+				try {
 				const cands: GateCandidate[] = hits.slice(0, 8).map((h) => ({ name: h.name, path: h.path, kind: h.kind, score: h.score }));
 				const rel = await gateShortlist(q, cands, jevLog);
 				if (rel) {
@@ -378,6 +379,9 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					if (gated.every((g) => (g.jev ?? 0) < 0.5)) {
 						gated = hits.slice(0, 3); // all doubted — keep engine order, top 3
 					}
+				}
+				} catch (e) {
+					jevLog({ event: "gate", decision: "unavailable", error: String(e).slice(0, 120) });
 				}
 			}
 			const shown = gated.length > 0 ? gated : hits;

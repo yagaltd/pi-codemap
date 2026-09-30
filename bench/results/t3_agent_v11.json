@@ -1,0 +1,31 @@
+{
+ "tier": "t3",
+ "suite": "agent",
+ "config": "v11",
+ "rows": [
+  {
+   "id": "emp-gate",
+   "repo": "empryo",
+   "kind": "question",
+   "config": "v11",
+   "repeat": 0,
+   "success": true,
+   "why": "log ok (3 events)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-gate-v11-0.jsonl",
+   "codemap_tools": [
+    "codemap_search"
+   ],
+   "wall_s": null,
+   "tokens_in": 3518,
+   "req1_in": 63,
+   "in_steady": 3455,
+   "tokens_out": 1609,
+   "cache_read": 66048,
+   "cache_write": 0,
+   "turns": 14,
+   "tool_calls": 13,
+   "files_read": 0,
+   "model": "glm-5.3"
+  }
+ ]
+}

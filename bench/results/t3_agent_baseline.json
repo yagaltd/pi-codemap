@@ -1,0 +1,29 @@
+{
+ "tier": "t3",
+ "suite": "agent",
+ "config": "baseline",
+ "rows": [
+  {
+   "id": "emp-gate",
+   "repo": "empryo",
+   "kind": "question",
+   "config": "baseline",
+   "repeat": 0,
+   "success": false,
+   "why": "no .codemap-jev.log (jev add-on absent or never decided)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-gate-baseline-0.jsonl",
+   "codemap_tools": [],
+   "wall_s": null,
+   "tokens_in": 25302,
+   "req1_in": 20605,
+   "in_steady": 4697,
+   "tokens_out": 1984,
+   "cache_read": 64000,
+   "cache_write": 0,
+   "turns": 11,
+   "tool_calls": 11,
+   "files_read": 0,
+   "model": "glm-5.3"
+  }
+ ]
+}

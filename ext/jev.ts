@@ -71,7 +71,7 @@ export async function systemOne(
 		const res = await fetch(TYPESAFE_URL, {
 			method: "POST",
 			headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-			body: JSON.stringify({ state, questions }),
+			body: JSON.stringify({ model: process.env.CODEMAP_JEV_MODEL || "jev-latest", state, questions }),
 			signal: ctrl.signal,
 		});
 		if (!res.ok) return null;
@@ -144,7 +144,7 @@ export async function gateShortlist(
 	cands.forEach((c, i) => {
 		questions[`c${i}`] = {
 			type: "noul",
-			instructions: `Query: ${JSON.stringify(redactSend(query))}\nCandidate: ${JSON.stringify(redactSend(c))}\nIs this candidate a relevant hit for the query?`,
+			instructions: `Query: ${JSON.stringify(redactSend(query))}\nCandidate: ${redactSend(JSON.stringify(c))}\nIs this candidate a relevant hit for the query?`,
 			criteria: {
 				true: "Yes — this symbol/file is what the query is looking for.",
 				false: "No — unrelated to what the query asks for.",
