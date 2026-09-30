@@ -1,0 +1,79 @@
+{
+ "tier": "t3",
+ "suite": "session",
+ "config": "v1",
+ "rows": [
+  {
+   "id": "cp-sess",
+   "repo": "code-parser",
+   "kind": "session",
+   "config": "v1",
+   "repeat": 0,
+   "success": true,
+   "why": "all answers present",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v1-0.jsonl",
+   "codemap_tools": [
+    "codemap_search"
+   ],
+   "wall_s": null,
+   "tokens_in": 3530,
+   "req1_in": 1825,
+   "in_steady": 1705,
+   "tokens_out": 865,
+   "cache_read": 41472,
+   "cache_write": 0,
+   "turns": 6,
+   "tool_calls": 7,
+   "files_read": 0,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-sess",
+   "repo": "empryo",
+   "kind": "session",
+   "config": "v1",
+   "repeat": 0,
+   "success": true,
+   "why": "all answers present",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-sess-v1-0.jsonl",
+   "codemap_tools": [
+    "codemap_search"
+   ],
+   "wall_s": null,
+   "tokens_in": 22729,
+   "req1_in": 20682,
+   "in_steady": 2047,
+   "tokens_out": 685,
+   "cache_read": 42816,
+   "cache_write": 0,
+   "turns": 5,
+   "tool_calls": 7,
+   "files_read": 0,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "cog-sess",
+   "repo": "cognitiveos",
+   "kind": "session",
+   "config": "v1",
+   "repeat": 0,
+   "success": true,
+   "why": "all answers present",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cog-sess-v1-0.jsonl",
+   "codemap_tools": [
+    "codemap_search"
+   ],
+   "wall_s": null,
+   "tokens_in": 21886,
+   "req1_in": 20471,
+   "in_steady": 1415,
+   "tokens_out": 757,
+   "cache_read": 41792,
+   "cache_write": 0,
+   "turns": 4,
+   "tool_calls": 5,
+   "files_read": 0,
+   "model": "glm-5.3"
+  }
+ ]
+}

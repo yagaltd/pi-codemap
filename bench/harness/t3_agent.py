@@ -134,9 +134,6 @@ def validate(task, clone, events, raw):
         missing = [n for n in v["needles"] if n not in content]
         if missing:
             return False, f"missing: {missing}"
-        # Delta check: the pristine file must NOT already satisfy the needles
-        # (a needle pre-existing in the repo is a dataset bug — the edit
-        # "succeeds" without the agent doing anything).
         pristine = subprocess.run(
             ["git", "-C", clone, "show", f"HEAD:{v['file']}"],
             capture_output=True, text=True)
@@ -145,6 +142,12 @@ def validate(task, clone, events, raw):
             if pre:
                 return False, f"DATASET BUG — needles pre-exist: {pre}"
         return True, "ok"
+    if v["type"] == "answers_contain":
+        text = final_text(events, raw)
+        missing = [n for n in v["needles"] if n not in text]
+        return (not missing), f"missing: {missing}" if missing else "all answers present"
+    if v["type"] == "precise_edit":
+        return validate_precise_edit(v, clone)
     if v["type"] == "answer_contains":
         text = final_text(events, raw)
         missing = [n for n in v["needles"] if n not in text]
@@ -152,10 +155,63 @@ def validate(task, clone, events, raw):
     return False, "unknown validator"
 
 
+def validate_precise_edit(v, clone):
+    """v1/v2 edit-precision contract: needle present, needle NEW, exactly one
+    file changed, and every diff hunk confined to the target symbol's line
+    range in the ORIGINAL file (±3 lines for doc-comment attachment)."""
+    file, needle, symbol = v["file"], v["needle"], v["symbol"]
+    target = os.path.join(clone, file)
+    try:
+        content = open(target, encoding="utf-8", errors="replace").read()
+    except OSError:
+        return False, f"file missing: {file}"
+    if needle not in content:
+        return False, f"needle missing"
+    pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{file}"],
+                              capture_output=True, text=True)
+    if pristine.returncode != 0:
+        return False, "no pristine copy"
+    if needle in pristine.stdout:
+        return False, "DATASET BUG — needle pre-exists"
+    changed = subprocess.run(["git", "-C", clone, "diff", "--name-only"],
+                             capture_output=True, text=True).stdout.split()
+    if changed != [file]:
+        return False, f"touched files: {changed}"
+    # Symbol range in the ORIGINAL file (fresh parse; suffix keeps language detection).
+    import tempfile
+    suffix = os.path.splitext(file)[1]
+    with tempfile.NamedTemporaryFile("w", suffix=suffix, delete=False) as tf:
+        tf.write(pristine.stdout)
+        tmp = tf.name
+    try:
+        r = C.run(["code-parser", "parse", tmp, "--json"])
+        ir = json.loads(r.stdout)
+        syms = [s for s in ir.get("symbols", []) if s.get("name") == symbol]
+        if not syms:
+            return False, f"symbol {symbol} not found in pristine"
+        lo = min(s["start_line"] for s in syms) - 3
+        hi = max(s["end_line"] for s in syms) + 3
+    finally:
+        os.unlink(tmp)
+    diff = subprocess.run(["git", "-C", clone, "diff", "-U0", "--", file],
+                          capture_output=True, text=True).stdout
+    outside = []
+    for m in re.finditer(r"@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", diff):
+        start = int(m.group(1))
+        count = int(m.group(2) or 1)
+        end = start + count - 1
+        if start < lo or end > hi:
+            outside.append(f"{start}-{end}")
+    if outside:
+        return False, f"edit escaped symbol range L{lo}-{hi}: hunks {outside}"
+    return True, f"precise (symbol L{lo + 3}-{hi - 3}, single file)"
+
+
 def main():
     only_config = None
     only_task = None
     repeat = 1
+    suite = "agent"
     args = sys.argv[1:]
     if "--config" in args:
         only_config = args[args.index("--config") + 1]
@@ -163,8 +219,10 @@ def main():
         only_task = args[args.index("--task") + 1]
     if "--repeat" in args:
         repeat = int(args[args.index("--repeat") + 1])
+    if "--suite" in args:
+        suite = args[args.index("--suite") + 1]
 
-    tasks = C.load_tasks("t3_agent.jsonl")
+    tasks = C.load_tasks(f"t3_{suite}.jsonl")
     if only_task:
         tasks = [t for t in tasks if t["id"] == only_task]
     configs = active_configs()
@@ -208,21 +266,28 @@ def main():
                     f.write(r.stdout)
                 events = walk_events(r.stdout)
                 metrics = extract_metrics(events, r.stdout)
+                codemap_tools = sorted({
+                    str(e.get("toolName")) for e in events
+                    if isinstance(e, dict) and e.get("type") == "tool_execution_start"
+                    and str(e.get("toolName", "")).startswith("codemap")
+                })
                 ok, why = validate(t, clone, events, r.stdout + r.stderr)
                 row = {
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
                     "repeat": rep, "success": ok, "why": why, "raw": raw_path,
+                    "codemap_tools": codemap_tools,
                     "wall_s": None, **metrics,
                 }
                 rows.append(row)
                 print(f"{t['id']:<16} {cfg_name:<9} {'PASS' if ok else 'FAIL'}  "
                       f"in={metrics['tokens_in']} out={metrics['tokens_out']} "
-                      f"tools={metrics['tool_calls']} turns={metrics['turns']}  {why}")
+                      f"tools={metrics['tool_calls']} turns={metrics['turns']} "
+                      f"codemap={'yes' if codemap_tools else 'no'}  {why}")
                 shutil.rmtree(clone, ignore_errors=True)
 
     # Per-config files (never overwritten by another config's run) + merged.
-    with open(os.path.join(C.RESULTS, f"t3_{cfg_name}.json"), "w") as f:
-        json.dump({"tier": "t3", "config": cfg_name, "rows": rows}, f, indent=1)
+    with open(os.path.join(C.RESULTS, f"t3_{suite}_{cfg_name}.json"), "w") as f:
+        json.dump({"tier": "t3", "suite": suite, "config": cfg_name, "rows": rows}, f, indent=1)
     path = os.path.join(C.RESULTS, "t3_agent.json")
     merged = {"tier": "t3", "rows": rows}
     if os.path.exists(path):
@@ -232,8 +297,9 @@ def main():
             merged["rows"] = keep + rows
         except json.JSONDecodeError:
             pass
-    with open(path, "w") as f:
-        json.dump(merged, f, indent=1)
+    if suite == "agent":
+        with open(path, "w") as f:
+            json.dump(merged, f, indent=1)
     # Summary per config.
     for cfg in configs:
         rs = [r for r in rows if r["config"] == cfg]
