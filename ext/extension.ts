@@ -26,7 +26,9 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { gateShortlist, gateTriggered, routeFirstPrompt, type GateCandidate } from "./jev.ts";
+import { gateShortlist, gateTriggered, routeFirstPrompt, systemOne, type GateCandidate } from "./jev.ts";
+import { keySituation, storeApiKey } from "./credentials.ts";
+import { promptForApiKey } from "./key-prompt.ts";
 
 const SNAPSHOT_BUDGET = 2500;
 const IDLE_TTL_MS = 5 * 60 * 1000;
@@ -294,6 +296,8 @@ export interface CodemapOptions {
 }
 
 export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): void {
+	let onboardedKeyMissing = false;
+
 	const st: State = {
 		cwd: "",
 		enabled: false,
@@ -322,6 +326,48 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		} else if (!st.enabled && ctx.hasUI) {
 			ctx.ui.setStatus("codemap", `codemap off (${(st.reason ?? "").slice(0, 40)})`);
 		}
+		// Onboarding (pi-typesafe pattern): say it once, never force a modal.
+		if (opts.jev && st.enabled && ctx.hasUI && !onboardedKeyMissing && keySituation().source === "missing") {
+			onboardedKeyMissing = true;
+			ctx.ui.notify(
+				"pi-codemap: Jev router/gate are inactive — no API key. Run /codemap:login to save one (also read from TYPESAFE_API_KEY or /typesafe login). Everything else works without it.",
+				"warning",
+			);
+		}
+	});
+
+	pi.registerCommand("codemap:login", {
+		description: "Save a TypeSafe API key for the Jev router/gate (owner-only file)",
+		handler: async (_args, ctx) => {
+			const sit = keySituation();
+			if (sit.source === "environment") {
+				if (ctx.hasUI) ctx.ui.notify("TYPESAFE_API_KEY is set in the environment and takes precedence over a stored key. Unset it before using /codemap:login.", "warning");
+				return;
+			}
+			if (!ctx.hasUI) {
+				console.log("codemap:login needs an interactive UI; set TYPESAFE_API_KEY instead.");
+				return;
+			}
+			const raw = await promptForApiKey(ctx);
+			if (raw === undefined) {
+				ctx.ui.notify("Login cancelled; nothing was saved.", "info");
+				return;
+			}
+			let key: string;
+			try {
+				key = storeApiKey(raw);
+			} catch (e) {
+				ctx.ui.notify(String((e as Error).message ?? e), "error");
+				return;
+			}
+			// Verify with one tiny judgment before claiming success.
+			const probe = await systemOne("login probe", { ok: { type: "noul", instructions: "Reply to this probe.", criteria: { true: "ok", false: "not ok" } } });
+			if (probe) {
+				ctx.ui.notify(`Key verified (model ${probe.model}) and saved to ${key} with owner-only permissions.`, "info");
+			} else {
+				ctx.ui.notify(`Key saved to ${key}, but the verification call failed — check the key at console.typesafe.ai.`, "warning");
+			}
+		},
 	});
 
 	pi.on("before_agent_start", async (event) => {
@@ -342,7 +388,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		// torched ~15k uncached tokens/request in the bench; a named section
 		// appends a transcript delta and keeps the prefix cache-stable.
 		event.systemPromptOptions.sections["codemap"] =
-			`Code map of this repository (auto-generated, ${st.snapshotMeta.files} files, ~${st.snapshotMeta.estTokens} tokens).\n\n${st.snapshot}\nUse codemap_search for precise per-query lookup and codemap_locate to resolve a symbol to its exact current range before editing.`;
+			`Code map of this repository (auto-generated pre-scan, ${st.snapshotMeta.files} files, ~${st.snapshotMeta.estTokens} tokens; may be a moment stale).\n\n${st.snapshot}\nThis map is a starting point, NOT ground truth: before answering "where is X" or editing, verify the exact code by reading the file or codemap_locate — do not answer from the map alone.\nUse codemap_search for precise per-query lookup and codemap_locate to resolve a symbol to its exact current range before editing.`;
 	});
 
 	pi.registerTool({
@@ -459,7 +505,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		description: "Show code-map state (files, snapshot, watcher)",
 		handler: async (_args, ctx) => {
 			const line = st.enabled
-				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty}`
+				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · key ${keySituation().source}`
 				: `disabled — ${st.reason}`;
 			if (ctx.hasUI) ctx.ui.notify(line, "info");
 			else console.log(line);

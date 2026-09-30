@@ -279,10 +279,12 @@ def main():
                 if os.path.exists(clone):
                     shutil.rmtree(clone)
                 subprocess.run(["git", "clone", "-q", "--local", src, clone], check=True)
+                t0 = time.monotonic()
                 r = subprocess.run(
                     ["pi", "-p", "--mode", "json", *cfg_args, t["prompt"]],
                     cwd=clone, capture_output=True, text=True, timeout=1800,
                 )
+                wall = round(time.monotonic() - t0, 1)
                 raw_path = os.path.join(C.WORK, "raw", f"{t['id']}-{cfg_name}-{rep}.jsonl")
                 with open(raw_path, "w") as f:
                     f.write(r.stdout)
@@ -298,7 +300,7 @@ def main():
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
                     "repeat": rep, "success": ok, "why": why, "raw": raw_path,
                     "codemap_tools": codemap_tools,
-                    "wall_s": None, **metrics,
+                    "wall_s": wall, **metrics,
                 }
                 rows.append(row)
                 print(f"{t['id']:<16} {cfg_name:<9} {'PASS' if ok else 'FAIL'}  "

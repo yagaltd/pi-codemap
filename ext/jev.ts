@@ -57,13 +57,15 @@ export function redactSend(s: string): string {
 
 type NoulAnswers = Record<string, number>;
 
+import { keySituation } from "./credentials.ts";
+
 /** One systemOne call. Returns {model, answers} or null on ANY failure
  * (missing key, timeout, bad response) — every caller fails open. */
 export async function systemOne(
 	state: unknown,
 	questions: Record<string, { type: "noul"; instructions: string; criteria?: { true: string; false: string } }>,
 ): Promise<{ model: string; answers: NoulAnswers } | null> {
-	const key = process.env.TYPESAFE_API_KEY?.trim();
+	const key = keySituation().key;
 	if (!key) return null;
 	const ctrl = new AbortController();
 	const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
