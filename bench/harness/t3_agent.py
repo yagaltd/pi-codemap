@@ -89,8 +89,12 @@ def extract_metrics(events, raw):
                 if p and ("read" in name.lower()):
                     files_read.add(str(p))
 
+    req1_in = per_request[0].get("input") or 0 if per_request else 0
+
     return {
         "tokens_in": sum(u.get("input") or 0 for u in per_request),
+        "req1_in": req1_in,
+        "in_steady": sum(u.get("input") or 0 for u in per_request) - req1_in,
         "tokens_out": sum(u.get("output") or 0 for u in per_request),
         "cache_read": max((u.get("cacheRead") or 0 for u in per_request), default=0),
         "cache_write": max((u.get("cacheWrite") or 0 for u in per_request), default=0),
@@ -171,6 +175,20 @@ def main():
         return
 
     os.makedirs(C.RESULTS, exist_ok=True)
+    os.makedirs(os.path.join(C.WORK, "raw"), exist_ok=True)
+    # Warm the provider prefix cache per config: request-1 cost is otherwise
+    # cross-run cache state (a cold shard billed ~40k to whichever config
+    # happened to run first), not extension behavior. A throwaway run with
+    # the exact same extension set makes request 1 comparable.
+    warm_dir = os.path.join(C.WORK, "warmup")
+    for cfg_name, cfg_args in configs.items():
+        if os.path.exists(warm_dir):
+            shutil.rmtree(warm_dir)
+        subprocess.run(["git", "clone", "-q", "--local", C.REPOS["code-parser"]["root"], warm_dir], check=True)
+        subprocess.run(
+            ["pi", "-p", "--mode", "json", *cfg_args, "Reply with exactly: ok"],
+            cwd=warm_dir, capture_output=True, text=True, timeout=600,
+        )
     rows = []
     for t in tasks:
         repo = t["repo"]
@@ -185,12 +203,15 @@ def main():
                     ["pi", "-p", "--mode", "json", *cfg_args, t["prompt"]],
                     cwd=clone, capture_output=True, text=True, timeout=1800,
                 )
+                raw_path = os.path.join(C.WORK, "raw", f"{t['id']}-{cfg_name}-{rep}.jsonl")
+                with open(raw_path, "w") as f:
+                    f.write(r.stdout)
                 events = walk_events(r.stdout)
                 metrics = extract_metrics(events, r.stdout)
                 ok, why = validate(t, clone, events, r.stdout + r.stderr)
                 row = {
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
-                    "repeat": rep, "success": ok, "why": why,
+                    "repeat": rep, "success": ok, "why": why, "raw": raw_path,
                     "wall_s": None, **metrics,
                 }
                 rows.append(row)
@@ -199,16 +220,29 @@ def main():
                       f"tools={metrics['tool_calls']} turns={metrics['turns']}  {why}")
                 shutil.rmtree(clone, ignore_errors=True)
 
+    # Per-config files (never overwritten by another config's run) + merged.
+    with open(os.path.join(C.RESULTS, f"t3_{cfg_name}.json"), "w") as f:
+        json.dump({"tier": "t3", "config": cfg_name, "rows": rows}, f, indent=1)
     path = os.path.join(C.RESULTS, "t3_agent.json")
+    merged = {"tier": "t3", "rows": rows}
+    if os.path.exists(path):
+        try:
+            old = json.load(open(path))
+            keep = [r for r in old.get("rows", []) if r.get("config") not in configs]
+            merged["rows"] = keep + rows
+        except json.JSONDecodeError:
+            pass
     with open(path, "w") as f:
-        json.dump({"tier": "t3", "rows": rows}, f, indent=1)
+        json.dump(merged, f, indent=1)
     # Summary per config.
     for cfg in configs:
         rs = [r for r in rows if r["config"] == cfg]
         if rs:
             print(f"\n{cfg}: success {sum(r['success'] for r in rs)}/{len(rs)}, "
-                  f"avg tokens_in={C.mean([r['tokens_in'] for r in rs]):.0f}, "
-                  f"avg tokens_out={C.mean([r['tokens_out'] for r in rs]):.0f}, "
+                  f"avg in={C.mean([r['tokens_in'] for r in rs]):.0f} "
+                  f"(steady={C.mean([r['in_steady'] for r in rs]):.0f}, req1={C.mean([r['req1_in'] for r in rs]):.0f}) "
+                  f"cached={C.mean([r['cache_read'] for r in rs]):.0f}, "
+                  f"avg out={C.mean([r['tokens_out'] for r in rs]):.0f}, "
                   f"avg tool_calls={C.mean([r['tool_calls'] for r in rs]):.1f}")
     print(f"wrote {path}")
 
