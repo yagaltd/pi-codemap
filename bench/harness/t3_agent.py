@@ -324,7 +324,7 @@ def main():
             shutil.rmtree(warm_dir)
         subprocess.run(["git", "clone", "-q", "--local", C.REPOS["code-parser"]["root"], warm_dir], check=True)
         subprocess.run(
-            ["pi", "-p", "--mode", "json", *cfg_args, "Reply with exactly: ok"],
+            ["pi", "-p", "--mode", "json", "-ne", *cfg_args, "Reply with exactly: ok"],
             cwd=warm_dir, capture_output=True, text=True, timeout=600,
         )
     rows = []
@@ -339,7 +339,7 @@ def main():
                 subprocess.run(["git", "clone", "-q", "--local", src, clone], check=True)
                 t0 = time.monotonic()
                 r = subprocess.run(
-                    ["pi", "-p", "--mode", "json", *cfg_args, t["prompt"]],
+                    ["pi", "-p", "--mode", "json", "-ne", *cfg_args, t["prompt"]],
                     cwd=clone, capture_output=True, text=True, timeout=1800,
                 )
                 wall = round(time.monotonic() - t0, 1)

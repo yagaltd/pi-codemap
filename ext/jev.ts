@@ -1,9 +1,15 @@
 /**
- * pi-codemap v1.1 — Jev (TypeSafe) add-ons, both FAIL-OPEN:
+ * pi-codemap v12.1 — Jev (TypeSafe) add-ons over pi's classifier-model registry.
+ *
+ * Transport lives in pi (v0.99+): extensions call ctx.modelRegistry.classify()
+ * with provider-neutral bool/score/choice questions — pi owns auth
+ * (TYPESAFE_API_KEY, /login resellers), model resolution, and usage accounting.
+ * This module keeps only our judgment logic + policy. Everything FAILS OPEN:
+ * missing registry or key = null = callers keep default behavior.
  *
  *  1. Router (session start): decide whether the map section is injected at
  *     all. Default = inject. A hard-trivial prompt skips for free (regex);
- *     anything else gets ONE noul judgment on the first message. Skip only
+ *     anything else gets ONE bool judgment on the first message. Skip only
  *     when Jev is confident it is NOT a codebase-navigation task (p < 0.25).
  *     Decided once per session — the provider cache makes a mid-session
  *     flip expensive, and a wrong "no" is recovered by codemap_search,
@@ -11,16 +17,31 @@
  *
  *  2. Search gate (per codemap_search): fires ONLY on doubtful shortlists
  *     (weak top score, or a near-tie at the top). Confident searches make
- *     zero API calls. On fire, one systemOne call re-judges each candidate's
- *     relevance (noul battery, one call); results are re-ranked by
- *     relevance. Never returns fewer than 3 hits.
+ *     zero API calls. On fire, one classify call re-judges each candidate's
+ *     relevance; results are re-ranked by relevance. Never returns fewer
+ *     than 3 hits.
  *
- *  Hygiene: everything sent to TypeSafe passes redactSend() first; each
- *  decision is appended to .codemap-jev.log when CODEMAP_JEV_LOG=1 so the
- *  bench can verify router/gate behavior from artifacts, not guesses.
+ *  Hygiene: everything sent to the classifier passes redactSend() first;
+ *  each decision is appended to .codemap-jev.log when CODEMAP_JEV_LOG=1 so
+ *  the bench can verify router/gate behavior from artifacts, not guesses.
  */
-const TYPESAFE_URL = "https://api.typesafe.ai/v1/systemone";
-const TIMEOUT_MS = 8000;
+import type { ClassifierResult } from "@earendil-works/pi-coding-agent";
+
+export type ClassifyFn = (
+	state: unknown,
+	questions: Record<string, { type: "bool"; instructions: string; criteria?: { true: string; false: string } }>,
+) => Promise<ClassifierResult>;
+
+let classifyFn: ClassifyFn | null = null;
+
+/** Called by the extension factory once a context exposes modelRegistry. */
+export function setClassifyFn(fn: ClassifyFn): void {
+	classifyFn = fn;
+}
+
+export function hasClassifier(): boolean {
+	return classifyFn !== null;
+}
 
 /** Free-skip patterns: high-precision trivial commands. Everything else that
  * looks non-code still goes through Jev — the regex only catches the obvious. */
@@ -55,39 +76,30 @@ export function redactSend(s: string): string {
 		.replace(/((?:KEY|TOKEN|SECRET|PASSWORD)[A-Za-z0-9_]*\s*[:=]\s*)"?[^"\n]{8,}"?/gi, '$1"[REDACTED]"');
 }
 
+type BoolQuestion = { type: "bool"; instructions: string; criteria?: { true: string; false: string } };
+
 type NoulAnswers = Record<string, number>;
 
-import { keySituation } from "./credentials.ts";
-
-/** One systemOne call. Returns {model, answers} or null on ANY failure
- * (missing key, timeout, bad response) — every caller fails open. */
+/** One classify call through pi's registry. Returns {model, answers} or null
+ * on ANY failure (no registry wiring, auth, bad response) — every caller
+ * fails open. pi translates bool questions to the provider wire format. */
 export async function systemOne(
 	state: unknown,
-	questions: Record<string, { type: "noul"; instructions: string; criteria?: { true: string; false: string } }>,
+	questions: Record<string, BoolQuestion>,
 ): Promise<{ model: string; answers: NoulAnswers } | null> {
-	const key = keySituation().key;
-	if (!key) return null;
-	const ctrl = new AbortController();
-	const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+	if (!classifyFn) return null;
 	try {
-		const res = await fetch(TYPESAFE_URL, {
-			method: "POST",
-			headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-			body: JSON.stringify({ model: process.env.CODEMAP_JEV_MODEL || "jev-latest", state, questions }),
-			signal: ctrl.signal,
-		});
-		if (!res.ok) return null;
-		const d = (await res.json()) as { model?: string; answers?: Record<string, { type: string; noul?: number }> };
-		if (!d.answers) return null;
+		const r = await classifyFn(redactSend(JSON.stringify(state)), questions);
+		if (!r?.answers) return null;
 		const answers: NoulAnswers = {};
-		for (const [name, a] of Object.entries(d.answers)) {
-			if (a?.type === "noul" && typeof a.noul === "number") answers[name] = a.noul;
+		for (const [name, a] of Object.entries(r.answers)) {
+			const p = (a as { probability?: number; noul?: number }).probability ?? (a as { noul?: number }).noul;
+			if (typeof p === "number") answers[name] = p;
 		}
-		return { model: String(d.model ?? "?"), answers };
+		if (Object.keys(answers).length === 0) return null;
+		return { model: String(r.model ?? "?"), answers };
 	} catch {
 		return null;
-	} finally {
-		clearTimeout(timer);
 	}
 }
 
@@ -107,7 +119,7 @@ export async function routeFirstPrompt(
 	}
 	const r = await systemOne(redactSend(prompt), {
 		codebase_task: {
-			type: "noul",
+			type: "bool",
 			instructions:
 				"Answering this user message will likely require knowing the repository's structure — its files, modules, or symbols (navigating, locating, or explaining code organization).",
 			criteria: {
@@ -171,10 +183,10 @@ export async function gateShortlist(
 	cands: GateCandidate[],
 	log?: (e: Record<string, unknown>) => void,
 ): Promise<number[] | null> {
-	const questions: Record<string, { type: "noul"; instructions: string; criteria: { true: string; false: string } }> = {};
+const questions: Record<string, BoolQuestion> = {};
 	cands.forEach((c, i) => {
 		questions[`c${i}`] = {
-			type: "noul",
+			type: "bool",
 			instructions: `Query: ${JSON.stringify(redactSend(query))}\nCandidate: ${redactSend(JSON.stringify(c))}\nIs this candidate a relevant hit for the query?`,
 			criteria: {
 				true: "Yes — this symbol/file is what the query is looking for.",

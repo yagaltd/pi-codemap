@@ -26,9 +26,8 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { classifySpan, gateShortlist, gateTriggered, routeFirstPrompt, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
-import { keySituation, storeApiKey } from "./credentials.ts";
-import { promptForApiKey } from "./key-prompt.ts";
+import { classifySpan, gateShortlist, gateTriggered, hasClassifier, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
+
 
 const SNAPSHOT_BUDGET = 2500;
 const IDLE_TTL_MS = 5 * 60 * 1000;
@@ -104,8 +103,7 @@ function init(st: State, ctx: ExtensionContext): void {
 		return;
 	}
 	fs.mkdirSync(MAPS_DIR, { recursive: true });
-	const key = crypto.createHash("sha1").update(ctx.cwd).digest("hex").slice(0, 16);
-	st.mapPath = path.join(MAPS_DIR, `map-${key}.jsonl`);
+	st.mapPath = path.join(MAPS_DIR, `map-${crypto.createHash("sha1").update(ctx.cwd).digest("hex").slice(0, 16)}.jsonl`);
 
 	const r = sh("code-map", ["refresh", ctx.cwd, "-o", st.mapPath, "--languages", "rust,typescript,javascript,python"], { timeout: 300_000 });
 	if (!r.ok) {
@@ -115,32 +113,8 @@ function init(st: State, ctx: ExtensionContext): void {
 	}
 	st.filesIndexed = countLines(st.mapPath);
 	renderSnapshot(st);
-	st.enabled = true; // BUGFIX: was never set — snapshot injection silently no-oped in all prior runs (tools still worked, so the bench never caught it)
-
-	// Watcher = change signal. Killed on session_shutdown; failure degrades
-	// to refresh-on-expiry (correct, just less fresh).
-	if (st.filesIndexed <= MAX_WATCH_FILES) {
-		try {
-			const w = spawn("code-parser", ["watch", ctx.cwd, "--emit", "jsonl"], {
-				stdio: ["ignore", "pipe", "ignore"],
-				detached: false,
-			});
-			let buf = "";
-			w.stdout.on("data", (chunk: Buffer) => {
-				buf += chunk.toString("utf8");
-				let nl: number;
-				while ((nl = buf.indexOf("\n")) >= 0) {
-					const line = buf.slice(0, nl).trim();
-					buf = buf.slice(nl + 1);
-					if (line.includes('"batch_end"')) st.mapDirty = true;
-				}
-			});
-			w.on("error", () => undefined);
-			st.watcher = w;
-		} catch {
-			/* degrade silently */
-		}
-	}
+	st.enabled = true;
+	jevLogProbe(st.cwd, { event: "init_done", files: st.filesIndexed });
 }
 
 function shutdown(st: State): void {
@@ -453,6 +427,12 @@ export interface CodemapOptions {
 }
 
 export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): void {
+	type MinimalRegistry = {
+		classify(model: unknown, ctx: { state: unknown; questions: unknown }): Promise<unknown>;
+		getModelOfType(type: string, provider: string, id: string): unknown;
+		getAvailableOfType(type: string): Promise<readonly unknown[]>;
+	};
+	let classifierWired = false;
 	let onboardedKeyMissing = false;
 	/** Failed-search rescue results, cached per query for this session. */
 	const rescueCache = new Map<string, SearchHit[]>();
@@ -467,6 +447,23 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		lastServedMs: 0,
 		filesIndexed: 0,
 	};
+
+	/** v12.1: hand pi's classifier registry to jev.ts (first context wins). */
+	function wireClassifier(ctx: ExtensionContext | undefined): void {
+		if (classifierWired || !ctx) return;
+		const reg = (ctx as unknown as { modelRegistry?: MinimalRegistry }).modelRegistry;
+		if (!reg || typeof reg.classify !== "function") return;
+		classifierWired = true;
+		setClassifyFn(async (state, questions) => {
+			let model = reg.getModelOfType("classifier", "typesafe", "jev-latest");
+			if (!model) {
+				const avail = await reg.getAvailableOfType("classifier");
+				model = avail[0];
+			}
+			if (!model) throw new Error("no classifier model with usable credentials");
+			return reg.classify(model, { state, questions }) as Promise<never> as never;
+		});
+	}
 
 	function jevLog(e: Record<string, unknown>): void {
 		if (process.env.CODEMAP_JEV_LOG) {
@@ -486,50 +483,17 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			ctx.ui.setStatus("codemap", `codemap off (${(st.reason ?? "").slice(0, 40)})`);
 		}
 		// Onboarding (pi-typesafe pattern): say it once, never force a modal.
-		if (opts.jev && st.enabled && ctx.hasUI && !onboardedKeyMissing && keySituation().source === "missing") {
+		if (opts.jev && st.enabled && ctx.hasUI && !onboardedKeyMissing && !hasClassifier()) {
 			onboardedKeyMissing = true;
 			ctx.ui.notify(
-				"pi-codemap: Jev router/gate are inactive — no API key. Run /codemap:login to save one (also read from TYPESAFE_API_KEY or /typesafe login). Everything else works without it.",
+				"pi-codemap: Jev router/gate idle — no classifier credentials. Set TYPESAFE_API_KEY in the environment that starts pi (or /login via a Jev reseller). Everything else works without it.",
 				"warning",
 			);
 		}
 	});
 
-	pi.registerCommand("codemap:login", {
-		description: "Save a TypeSafe API key for the Jev router/gate (owner-only file)",
-		handler: async (_args, ctx) => {
-			const sit = keySituation();
-			if (sit.source === "environment") {
-				if (ctx.hasUI) ctx.ui.notify("TYPESAFE_API_KEY is set in the environment and takes precedence over a stored key. Unset it before using /codemap:login.", "warning");
-				return;
-			}
-			if (!ctx.hasUI) {
-				console.log("codemap:login needs an interactive UI; set TYPESAFE_API_KEY instead.");
-				return;
-			}
-			const raw = await promptForApiKey(ctx);
-			if (raw === undefined) {
-				ctx.ui.notify("Login cancelled; nothing was saved.", "info");
-				return;
-			}
-			let key: string;
-			try {
-				key = storeApiKey(raw);
-			} catch (e) {
-				ctx.ui.notify(String((e as Error).message ?? e), "error");
-				return;
-			}
-			// Verify with one tiny judgment before claiming success.
-			const probe = await systemOne("login probe", { ok: { type: "noul", instructions: "Reply to this probe.", criteria: { true: "ok", false: "not ok" } } });
-			if (probe) {
-				ctx.ui.notify(`Key verified (model ${probe.model}) and saved to ${key} with owner-only permissions.`, "info");
-			} else {
-				ctx.ui.notify(`Key saved to ${key}, but the verification call failed — check the key at console.typesafe.ai.`, "warning");
-			}
-		},
-	});
-
-	pi.on("before_agent_start", async (event) => {
+	pi.on("before_agent_start", async (event, ctx) => {
+		wireClassifier(ctx);
 		if (!st.enabled || !st.snapshot) return;
 		// v1.1 router: decide ONCE per session whether this session gets the
 		// map at all. Default inject; skip only on confident non-code. The
@@ -743,7 +707,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		description: "Show code-map state (files, snapshot, watcher)",
 		handler: async (_args, ctx) => {
 			const line = st.enabled
-				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · key ${keySituation().source}`
+				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · jev ${hasClassifier() ? "wired" : "off"}`
 				: `disabled — ${st.reason}`;
 			if (ctx.hasUI) ctx.ui.notify(line, "info");
 			else console.log(line);
