@@ -1,0 +1,150 @@
+{
+ "tier": "t2",
+ "summary": {
+  "cases": 11,
+  "locate_exact": 11,
+  "refusals_correct": 3,
+  "no_wrong_splice": 11,
+  "splice_pass": 8,
+  "outside_intact_all": true
+ },
+ "rows": [
+  {
+   "id": "cp-e1-identity",
+   "mode": "identity",
+   "symbol": "enabled",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "identity_exact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "cp-e2-marker",
+   "mode": "marker",
+   "symbol": "resolve_import_paths_with",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "cp-e3-ambiguous",
+   "mode": "marker",
+   "symbol": "with_debounce",
+   "expect_matches": 2,
+   "expect_refuse": true,
+   "matches": 2,
+   "outcome": "refused_ambiguity_or_missing",
+   "refused": true
+  },
+  {
+   "id": "cp-e4-negative",
+   "mode": "negative",
+   "symbol": "definitely_not_a_real_symbol",
+   "expect_matches": 0,
+   "expect_refuse": true,
+   "matches": 0,
+   "outcome": "refused_ambiguity_or_missing",
+   "refused": true
+  },
+  {
+   "id": "cp-e5-stale",
+   "mode": "stale",
+   "symbol": "enabled",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "emp-e1-marker",
+   "mode": "marker",
+   "symbol": "SUPPORTED_EXTENSIONS",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "emp-e2-identity",
+   "mode": "identity",
+   "symbol": "isSupportedFile",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "identity_exact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "emp-e3-marker",
+   "mode": "marker",
+   "symbol": "TRIGRAM_MAX_FILE_BYTES",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "cog-e1-identity",
+   "mode": "identity",
+   "symbol": "prior_file_id",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "identity_exact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "cog-e2-marker",
+   "mode": "marker",
+   "symbol": "ingest_file_bytes",
+   "expect_matches": 1,
+   "expect_refuse": false,
+   "matches": 1,
+   "reparses_clean": true,
+   "marker_present": true,
+   "outside_intact": true,
+   "outcome": "pass",
+   "refused": false
+  },
+  {
+   "id": "cog-e3-negative",
+   "mode": "negative",
+   "symbol": "no_such_fn_here",
+   "expect_matches": 0,
+   "expect_refuse": true,
+   "matches": 0,
+   "outcome": "refused_ambiguity_or_missing",
+   "refused": true
+  }
+ ]
+}

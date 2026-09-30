@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+"""T3 — agent-in-the-loop: pi defaults vs v1 vs v2 on real tasks.
+
+Runs pi headless (`pi -p --mode json`) inside a throwaway local clone of
+each target repo, with optional extension configs:
+
+  baseline  pi's built-in tools only          (runnable today)
+  v1        + codemap extension (search/locate)   (fills in when built)
+  v2        + edit-by-name tool                   (fills in when built)
+
+Metrics per run: validator success, input/output tokens, assistant turns,
+tool calls, files read, wall time. LLM variance is real: report per-task
+rows and rerun with --repeat N for means.
+
+Run: python3 bench/harness/t3_agent.py [--config baseline] [--task cp-t2-question] [--repeat 1]
+"""
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import common as C
+
+# v1/v2 rows activate when the extension exists at these paths.
+CONFIGS = {
+    "baseline": [],
+    "v1": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v1")],
+    "v2": ["--extension", os.path.join(C.BENCH, "..", "pi-codemap-v2")],
+}
+
+
+def active_configs():
+    out = {}
+    for name, args in CONFIGS.items():
+        if name == "baseline" or (len(args) > 1 and os.path.exists(args[1])):
+            out[name] = args
+    return out
+
+
+def walk_events(text):
+    """pi --mode json emits JSON objects (one per line). Be tolerant."""
+    events = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError:
+            pass
+    return events
+
+
+def extract_metrics(events, raw):
+    """Event-shape-aware (docs/json.md): usage is cumulative on the latest
+    message_update; message_end(role=assistant) = one turn; tool_call events
+    count tool uses. cacheRead/cacheWrite are kept — they measure the
+    frozen-prefix payoff for v1/v2."""
+    per_request = []  # one usage snapshot per assistant request (per-request, not cumulative)
+    turns = tool_calls = 0
+    files_read = set()
+    model = None
+    pending_usage = None
+
+    for e in events:
+        if not isinstance(e, dict):
+            continue
+        etype = e.get("type")
+        if etype == "message_update" and isinstance(e.get("usage"), dict):
+            pending_usage = e["usage"]  # last update of this request wins
+        elif etype == "message_end":
+            msg = e.get("message", {})
+            if isinstance(msg, dict) and msg.get("role") == "assistant":
+                turns += 1
+                model = msg.get("model") or model
+                if pending_usage is not None:
+                    per_request.append(pending_usage)
+                    pending_usage = None
+        elif etype == "tool_execution_start":
+            tool_calls += 1
+            args = e.get("args") or {}
+            name = str(e.get("toolName") or "")
+            if isinstance(args, dict):
+                p = args.get("path") or args.get("file_path") or args.get("file")
+                if p and ("read" in name.lower()):
+                    files_read.add(str(p))
+
+    return {
+        "tokens_in": sum(u.get("input") or 0 for u in per_request),
+        "tokens_out": sum(u.get("output") or 0 for u in per_request),
+        "cache_read": max((u.get("cacheRead") or 0 for u in per_request), default=0),
+        "cache_write": max((u.get("cacheWrite") or 0 for u in per_request), default=0),
+        "turns": turns,
+        "tool_calls": tool_calls,
+        "files_read": len(files_read),
+        "model": model,
+    }
+
+
+def final_text(events, raw):
+    texts = []
+
+    def visit(o):
+        if isinstance(o, dict):
+            if (o.get("role") == "assistant" or o.get("type") == "assistant_message") and isinstance(o.get("text"), str):
+                texts.append(o["text"])
+            for v in o.values():
+                visit(v)
+        elif isinstance(o, list):
+            for v in o:
+                visit(v)
+
+    for e in events:
+        visit(e)
+    return "\n".join(texts) or raw
+
+
+def validate(task, clone, events, raw):
+    v = task["validator"]
+    if v["type"] == "file_contains":
+        target = os.path.join(clone, v["file"])
+        try:
+            content = open(target, encoding="utf-8", errors="replace").read()
+        except OSError:
+            return False, f"file missing: {v['file']}"
+        missing = [n for n in v["needles"] if n not in content]
+        if missing:
+            return False, f"missing: {missing}"
+        # Delta check: the pristine file must NOT already satisfy the needles
+        # (a needle pre-existing in the repo is a dataset bug — the edit
+        # "succeeds" without the agent doing anything).
+        pristine = subprocess.run(
+            ["git", "-C", clone, "show", f"HEAD:{v['file']}"],
+            capture_output=True, text=True)
+        if pristine.returncode == 0:
+            pre = [n for n in v["needles"] if n in pristine.stdout]
+            if pre:
+                return False, f"DATASET BUG — needles pre-exist: {pre}"
+        return True, "ok"
+    if v["type"] == "answer_contains":
+        text = final_text(events, raw)
+        missing = [n for n in v["needles"] if n not in text]
+        return (not missing), f"missing: {missing}" if missing else "ok"
+    return False, "unknown validator"
+
+
+def main():
+    only_config = None
+    only_task = None
+    repeat = 1
+    args = sys.argv[1:]
+    if "--config" in args:
+        only_config = args[args.index("--config") + 1]
+    if "--task" in args:
+        only_task = args[args.index("--task") + 1]
+    if "--repeat" in args:
+        repeat = int(args[args.index("--repeat") + 1])
+
+    tasks = C.load_tasks("t3_agent.jsonl")
+    if only_task:
+        tasks = [t for t in tasks if t["id"] == only_task]
+    configs = active_configs()
+    if only_config:
+        configs = {only_config: CONFIGS[only_config]} if only_config in configs else {}
+    if not configs:
+        print("no active configs (extension paths missing?)")
+        return
+
+    os.makedirs(C.RESULTS, exist_ok=True)
+    rows = []
+    for t in tasks:
+        repo = t["repo"]
+        src = C.REPOS[repo]["root"]
+        for cfg_name, cfg_args in configs.items():
+            for rep in range(repeat):
+                clone = os.path.join(C.WORK, "t3", f"{t['id']}-{cfg_name}-{rep}")
+                if os.path.exists(clone):
+                    shutil.rmtree(clone)
+                subprocess.run(["git", "clone", "-q", "--local", src, clone], check=True)
+                r = subprocess.run(
+                    ["pi", "-p", "--mode", "json", *cfg_args, t["prompt"]],
+                    cwd=clone, capture_output=True, text=True, timeout=1800,
+                )
+                events = walk_events(r.stdout)
+                metrics = extract_metrics(events, r.stdout)
+                ok, why = validate(t, clone, events, r.stdout + r.stderr)
+                row = {
+                    "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
+                    "repeat": rep, "success": ok, "why": why,
+                    "wall_s": None, **metrics,
+                }
+                rows.append(row)
+                print(f"{t['id']:<16} {cfg_name:<9} {'PASS' if ok else 'FAIL'}  "
+                      f"in={metrics['tokens_in']} out={metrics['tokens_out']} "
+                      f"tools={metrics['tool_calls']} turns={metrics['turns']}  {why}")
+                shutil.rmtree(clone, ignore_errors=True)
+
+    path = os.path.join(C.RESULTS, "t3_agent.json")
+    with open(path, "w") as f:
+        json.dump({"tier": "t3", "rows": rows}, f, indent=1)
+    # Summary per config.
+    for cfg in configs:
+        rs = [r for r in rows if r["config"] == cfg]
+        if rs:
+            print(f"\n{cfg}: success {sum(r['success'] for r in rs)}/{len(rs)}, "
+                  f"avg tokens_in={C.mean([r['tokens_in'] for r in rs]):.0f}, "
+                  f"avg tokens_out={C.mean([r['tokens_out'] for r in rs]):.0f}, "
+                  f"avg tool_calls={C.mean([r['tool_calls'] for r in rs]):.1f}")
+    print(f"wrote {path}")
+
+
+if __name__ == "__main__":
+    main()
