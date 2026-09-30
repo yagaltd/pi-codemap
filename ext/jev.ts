@@ -140,6 +140,21 @@ export function subQueryTerms(query: string): string[] {
 	)].filter((w) => w.length >= 4 && !STOPWORDS.has(w)).slice(0, 4);
 }
 
+/** Classify an edit's line span (1-based, inclusive) against the file's symbols:
+ *  inside one symbol → containment check; overlapping any symbol without being
+ *  contained → boundary-spanning (refused); touching no symbol → free. */
+export function classifySpan(
+	symbols: { name: string; start_line: number; end_line: number }[],
+	startLine: number,
+	endLine: number,
+): { kind: "inside"; sym: { name: string; start_line: number; end_line: number } } | { kind: "spanning"; syms: string[] } | { kind: "free" } {
+	const overlapping = symbols.filter((sym) => startLine <= sym.end_line && endLine >= sym.start_line);
+	const inside = overlapping.find((sym) => startLine >= sym.start_line && endLine <= sym.end_line);
+	if (inside) return { kind: "inside", sym: inside };
+	if (overlapping.length > 0) return { kind: "spanning", syms: overlapping.map((s) => s.name) };
+	return { kind: "free" };
+}
+
 // ── search gate ───────────────────────────────────────────────────────────
 
 export interface GateCandidate {

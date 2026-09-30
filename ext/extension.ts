@@ -388,10 +388,9 @@ export function runGuardedEdit(
 		const newStartLine = oldStartLine + deltaLines;
 		const newEndLine = newStartLine + countLinesStr(s.newText) - 1;
 		deltaLines += countLinesStr(s.newText) - countLinesStr(s.op.oldText);
-		const innermost = symbols
-			.filter((sym) => oldStartLine + 1 >= sym.start_line && oldEndLine + 1 <= sym.end_line)
-			.sort((a, b) => a.end_line - a.start_line - (b.end_line - b.start_line))[0];
-		if (innermost) {
+		const cls = classifySpan(symbols, oldStartLine + 1, oldEndLine + 1);
+		if (cls.kind === "inside") {
+			const innermost = cls.sym;
 			const lo = innermost.start_line - 3;
 			const hi = innermost.end_line + 3;
 			if (newStartLine + 1 < lo || newEndLine + 1 > hi) {
@@ -399,6 +398,9 @@ export function runGuardedEdit(
 				return { ok: false, detail: `edit escapes symbol '${innermost.name}' (L${innermost.start_line}-${innermost.end_line}): replacement spans L${newStartLine + 1}-${newEndLine + 1}, allowed L${lo}-${hi}. Narrow the edit or use write for whole-file changes.` };
 			}
 			plan.push({ start: s.start, end: s.end, newText: s.newText, symName: innermost.name, symStart: innermost.start_line, symEnd: innermost.end_line, newStartLine, newEndLine });
+		} else if (cls.kind === "spanning") {
+			jevLog({ event: "edit_guard", decision: "refused_span", file: path_, symbols: cls.syms, span: [oldStartLine + 1, oldEndLine + 1] });
+			return { ok: false, detail: `edit spans symbol boundaries (${cls.syms.join(", ")}). Split it into one edit per symbol, or use write for a whole-file restructure.` };
 		} else {
 			plan.push({ start: s.start, end: s.end, newText: s.newText, newStartLine, newEndLine });
 		}

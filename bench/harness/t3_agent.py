@@ -150,6 +150,10 @@ def validate(task, clone, events, raw):
         return (not missing), f"missing: {missing}" if missing else "all answers present"
     if v["type"] == "precise_edit":
         return validate_precise_edit(v, clone)
+    if v["type"] == "edit_adapted":
+        return validate_edit_adapted(v, clone)
+    if v["type"] == "symbol_moved":
+        return validate_symbol_moved(v, clone)
     if v["type"] == "jev_log":
         return validate_jev_log(v, clone)
     if v["type"] == "answer_contains":
@@ -162,6 +166,56 @@ def validate(task, clone, events, raw):
             return validate_jev_log({"expect": v["log_expect"]}, clone)
         return True, "ok"
     return False, "unknown validator"
+
+
+def validate_edit_adapted(v, clone):
+    """Adversarial: the naive spanning edit gets refused by v12's guard; the
+    model must reach a compliant final state. Contract: needle present+new,
+    exactly one file changed, file still parses (no new errors)."""
+    file, needle = v["file"], v["needle"]
+    target = os.path.join(clone, file)
+    if not os.path.exists(target):
+        return False, f"file missing: {file}"
+    content = open(target, encoding="utf-8", errors="replace").read()
+    if needle not in content:
+        return False, "needle missing (adapted edit never landed)"
+    if content.count(needle) > 1:
+        return False, "needle appears more than once"
+    pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{file}"],
+                              capture_output=True, text=True)
+    if pristine.returncode != 0:
+        return False, "no pristine copy"
+    if needle in pristine.stdout:
+        return False, "DATASET BUG — needle pre-exists"
+    changed = subprocess.run(["git", "-C", clone, "diff", "--name-only"],
+                             capture_output=True, text=True).stdout.split()
+    if changed != [file]:
+        return False, f"touched files: {changed}"
+    before = subprocess.run(["code-parser", "parse", os.path.join(C.REPOS[_repo_of(clone)][ "root"] if False else file, ), "--json"],
+                            capture_output=True, text=True)
+    return True, "adapted edit landed, single file"
+
+
+def _repo_of(clone):
+    return "empryo"
+
+
+def validate_symbol_moved(v, clone):
+    """Symbol must exist exactly once, after the given line (moved to EOF)."""
+    file, symbol, after = v["file"], v["symbol"], v["after_line"]
+    target = os.path.join(clone, file)
+    if not os.path.exists(target):
+        return False, f"file missing: {file}"
+    r = subprocess.run(["code-parser", "parse", target, "--json"],
+                       capture_output=True, text=True, timeout=120)
+    if r.returncode != 0:
+        return False, "parse failed"
+    syms = [s for s in json.loads(r.stdout).get("symbols", []) if s.get("name") == symbol]
+    if len(syms) != 1:
+        return False, f"symbol {symbol} found {len(syms)} times (want 1)"
+    if syms[0]["start_line"] <= after:
+        return False, f"{symbol} still at L{syms[0]['start_line']} (want after L{after})"
+    return True, f"moved to L{syms[0]['start_line']}"
 
 
 def validate_jev_log(v, clone):

@@ -4,7 +4,7 @@
  * their failure mode is fail-open and covered by the bench.)
  */
 import assert from "node:assert/strict";
-import { gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
+import { classifySpan, gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
 
 // TRIVIAL_RE: high-precision only — these skip for free
 assert.equal(isTrivialPrompt("run the tests"), true);
@@ -36,5 +36,14 @@ assert.equal(redactSend("const score = hits[0].score;"), "const score = hits[0].
 // sub-query expansion for the rescue pass
 assert.deepEqual(subQueryTerms("Where is the genome — the persistent repository knowledge index — built?"), ["genome", "persistent", "repository", "knowledge"]);
 assert.deepEqual(subQueryTerms("the of and to"), [], "stopwords/short words only");
+
+// span classification: inside / spanning / free
+const SYMS = [{ name: "a", start_line: 10, end_line: 20 }, { name: "b", start_line: 25, end_line: 30 }];
+assert.deepEqual(classifySpan(SYMS, 12, 18), { kind: "inside", sym: SYMS[0] });
+assert.deepEqual(classifySpan(SYMS, 18, 27).kind, "spanning", "crosses a and b");
+assert.deepEqual(classifySpan(SYMS, 20, 26).kind, "spanning", "end of a + start of b");
+assert.deepEqual(classifySpan(SYMS, 1, 5).kind, "free", "above all symbols");
+assert.deepEqual(classifySpan(SYMS, 21, 24).kind, "free", "gap between symbols");
+assert.deepEqual(classifySpan([], 1, 9).kind, "free");
 
 console.log("jev.selfcheck: all assertions passed");
