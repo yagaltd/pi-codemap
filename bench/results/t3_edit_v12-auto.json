@@ -1,0 +1,32 @@
+{
+ "tier": "t3",
+ "suite": "edit",
+ "config": "v12-auto",
+ "rows": [
+  {
+   "id": "cp-edit",
+   "repo": "code-parser",
+   "kind": "edit",
+   "config": "v12-auto",
+   "repeat": 0,
+   "success": false,
+   "why": "needle missing: ['with_capacity(4)']",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-auto-0.jsonl",
+   "codemap_tools": [],
+   "jev_events": [],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 0.5,
+   "tokens_in": 0,
+   "req1_in": 0,
+   "in_steady": 0,
+   "tokens_out": 0,
+   "cache_read": 0,
+   "cache_write": 0,
+   "turns": 0,
+   "tool_calls": 0,
+   "files_read": 0,
+   "model": null
+  }
+ ]
+}

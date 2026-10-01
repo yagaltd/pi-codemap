@@ -122,7 +122,8 @@ export function loadRoutingTiers(): RoutingTiers | null {
 	const p = join(homedir(), ".config", "pi-codemap", "models.json");
 	if (!existsSync(p)) return null;
 	try {
-		const parsed = JSON.parse(readFileSync(p, "utf8")) as RoutingTiers;
+		const root = JSON.parse(readFileSync(p, "utf8")) as { tiers?: RoutingTiers };
+		const parsed = (root && typeof root === "object" && root.tiers ? root.tiers : root) as RoutingTiers;
 		const labels = Object.keys(parsed);
 		if (labels.length === 0) return null;
 		for (const k of labels)
