@@ -25,7 +25,7 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.68,
+     "p": 0.67,
      "model": "jev-latest"
     },
     {
@@ -44,14 +44,15 @@
      "event": "edit_called"
     }
    ],
-   "wall_s": 43.9,
-   "tokens_in": 3259,
+   "codemode_calls": 0,
+   "wall_s": 37.4,
+   "tokens_in": 3252,
    "req1_in": 1768,
-   "in_steady": 1491,
-   "tokens_out": 846,
+   "in_steady": 1484,
+   "tokens_out": 784,
    "cache_read": 22336,
    "cache_write": 0,
-   "turns": 7,
+   "turns": 6,
    "tool_calls": 6,
    "files_read": 1,
    "model": "glm-5.3"

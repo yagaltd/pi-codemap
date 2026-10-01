@@ -32,6 +32,9 @@ CONFIGS = {
     "v2": ["--extension", os.path.join(C.BENCH, "configs", "v2.ts")],
     "v11": ["--extension", os.path.join(C.BENCH, "configs", "v11.ts")],
     "v12": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts")],
+    "v12-cm": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts"),
+               "-e", "builtin:codemode",
+               "--tools", "read,bash,edit,write,codemode"],
 }
 
 
@@ -150,6 +153,8 @@ def validate(task, clone, events, raw):
         return (not missing), f"missing: {missing}" if missing else "all answers present"
     if v["type"] == "precise_edit":
         return validate_precise_edit(v, clone)
+    if v["type"] == "multi_file_edit":
+        return validate_multi_file_edit(v, clone)
     if v["type"] == "edit_adapted":
         return validate_edit_adapted(v, clone)
     if v["type"] == "symbol_moved":
@@ -166,6 +171,31 @@ def validate(task, clone, events, raw):
             return validate_jev_log({"expect": v["log_expect"]}, clone)
         return True, "ok"
     return False, "unknown validator"
+
+
+def validate_multi_file_edit(v, clone):
+    """Multi-file contract: every file carries its needle (new vs pristine),
+    and the working tree changed exactly the listed files, nothing else."""
+    spec = v["files"]
+    # porcelain catches untracked litter too (git diff --name-only does not)
+    status = subprocess.run(["git", "-C", clone, "status", "--porcelain"],
+                            capture_output=True, text=True).stdout.splitlines()
+    changed = sorted(l[3:].strip().strip('"') for l in status if l.strip())
+    expected = sorted(f["file"] for f in spec)
+    if changed != expected:
+        return False, f"touched files: {changed} (want {expected})"
+    for f in spec:
+        path = os.path.join(clone, f["file"])
+        if not os.path.exists(path):
+            return False, f"file missing: {f['file']}"
+        content = open(path, encoding="utf-8", errors="replace").read()
+        if content.count(f["needle"]) != 1:
+            return False, f"{f['file']}: needle {f['needle']!r} count={content.count(f['needle'])} (want 1)"
+        pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{f['file']}"],
+                                  capture_output=True, text=True)
+        if pristine.returncode == 0 and f["needle"] in pristine.stdout:
+            return False, f"DATASET BUG — needle pre-exists in {f['file']}"
+    return True, f"multi-file ok ({len(spec)} files)"
 
 
 def validate_edit_adapted(v, clone):
@@ -356,6 +386,11 @@ def main():
                     if isinstance(e, dict) and e.get("type") == "tool_execution_start"
                     and str(e.get("toolName", "")).startswith("codemap")
                 })
+                codemode_calls = sum(
+                    1 for e in events
+                    if isinstance(e, dict) and e.get("type") == "tool_execution_start"
+                    and e.get("toolName") == "codemode"
+                )
                 ok, why = validate(t, clone, events, r.stdout + r.stderr)
                 jev_path = os.path.join(clone, ".codemap-jev.log")
                 jev_events = []
@@ -367,6 +402,7 @@ def main():
                     "repeat": rep, "success": ok, "why": why, "raw": raw_path,
                     "codemap_tools": codemap_tools,
                     "jev_events": jev_events,
+                    "codemode_calls": codemode_calls,
                     "wall_s": wall, **metrics,
                 }
                 rows.append(row)
