@@ -3,6 +3,86 @@
  "suite": "edit",
  "rows": [
   {
+   "id": "cp-edit",
+   "repo": "code-parser",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 0,
+   "success": true,
+   "why": "precise (symbol L43-54, single file)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-0.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-0"
+    },
+    {
+     "event": "init_done",
+     "files": 53
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.992422758508031,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "crates/code-parser-core/src/language.rs",
+     "edits": 1,
+     "symbols": [
+      "enabled L43-54"
+     ]
+    },
+    {
+     "event": "edit_called"
+    }
+   ],
+   "codemode_calls": 0,
+   "wall_s": 59.2,
+   "tokens_in": 2559,
+   "req1_in": 36,
+   "in_steady": 2523,
+   "tokens_out": 1446,
+   "cache_read": 23040,
+   "cache_write": 0,
+   "turns": 10,
+   "tool_calls": 9,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-span",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 0,
+   "success": true,
+   "why": "adapted edit landed, single file",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-0.jsonl",
+   "codemap_tools": [
+    "codemap_locate"
+   ],
+   "jev_events": [],
+   "codemode_calls": 0,
+   "wall_s": 78.6,
+   "tokens_in": 5025,
+   "req1_in": 50,
+   "in_steady": 4975,
+   "tokens_out": 3891,
+   "cache_read": 27392,
+   "cache_write": 0,
+   "turns": 10,
+   "tool_calls": 10,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
    "id": "emp-manyfile-cm",
    "repo": "empryo",
    "kind": "edit",
@@ -421,60 +501,6 @@
    "model": "glm-5.3"
   },
   {
-   "id": "cp-edit",
-   "repo": "code-parser",
-   "kind": "edit",
-   "config": "v12",
-   "repeat": 0,
-   "success": true,
-   "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-0.jsonl",
-   "codemap_tools": [],
-   "jev_events": [
-    {
-     "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-0"
-    },
-    {
-     "event": "init_done",
-     "files": 52
-    },
-    {
-     "event": "router",
-     "decision": "code",
-     "p": 0.67,
-     "model": "jev-latest"
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "crates/code-parser-core/src/language.rs",
-     "edits": 1,
-     "symbols": [
-      "enabled L43-54"
-     ]
-    },
-    {
-     "event": "edit_called"
-    }
-   ],
-   "codemode_calls": 0,
-   "wall_s": 37.4,
-   "tokens_in": 3252,
-   "req1_in": 1768,
-   "in_steady": 1484,
-   "tokens_out": 784,
-   "cache_read": 22336,
-   "cache_write": 0,
-   "turns": 6,
-   "tool_calls": 6,
-   "files_read": 1,
-   "model": "glm-5.3"
-  },
-  {
    "id": "emp-multifile",
    "repo": "empryo",
    "kind": "edit",
@@ -541,64 +567,6 @@
    "turns": 8,
    "tool_calls": 9,
    "files_read": 2,
-   "model": "glm-5.3"
-  },
-  {
-   "id": "emp-span",
-   "repo": "empryo",
-   "kind": "edit",
-   "config": "v12",
-   "repeat": 0,
-   "success": true,
-   "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-0.jsonl",
-   "codemap_tools": [
-    "codemap_locate"
-   ],
-   "jev_events": [
-    {
-     "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-0"
-    },
-    {
-     "event": "init_done",
-     "files": 576
-    },
-    {
-     "event": "router",
-     "decision": "code",
-     "p": 0.9,
-     "model": "jev-latest"
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "refused_span",
-     "file": "src/core/tools/project.ts",
-     "symbols": [
-      "detectJsPm",
-      "readPackageScripts",
-      "pkg",
-      "detectJsLinter"
-     ],
-     "span": [
-      385,
-      396
-     ]
-    }
-   ],
-   "wall_s": 74.1,
-   "tokens_in": 25999,
-   "req1_in": 21764,
-   "in_steady": 4235,
-   "tokens_out": 3592,
-   "cache_read": 27008,
-   "cache_write": 0,
-   "turns": 7,
-   "tool_calls": 7,
-   "files_read": 1,
    "model": "glm-5.3"
   },
   {

@@ -4,42 +4,57 @@
  "config": "v12",
  "rows": [
   {
-   "id": "emp-manyfile-cm",
-   "repo": "empryo",
+   "id": "cp-edit",
+   "repo": "code-parser",
    "kind": "edit",
    "config": "v12",
    "repeat": 0,
    "success": true,
-   "why": "multi-file ok (8 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-manyfile-cm-v12-0.jsonl",
+   "why": "precise (symbol L43-54, single file)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-manyfile-cm-v12-0"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-0"
     },
     {
      "event": "init_done",
-     "files": 576
+     "files": 53
     },
     {
      "event": "router",
      "decision": "code",
-     "p": 0.45,
-     "model": "jev-latest"
+     "p": 0.992422758508031,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "crates/code-parser-core/src/language.rs",
+     "edits": 1,
+     "symbols": [
+      "enabled L43-54"
+     ]
+    },
+    {
+     "event": "edit_called"
     }
    ],
    "codemode_calls": 0,
-   "wall_s": 35.5,
-   "tokens_in": 1796,
-   "req1_in": 40,
-   "in_steady": 1756,
-   "tokens_out": 1403,
-   "cache_read": 24704,
+   "wall_s": 59.2,
+   "tokens_in": 2559,
+   "req1_in": 36,
+   "in_steady": 2523,
+   "tokens_out": 1446,
+   "cache_read": 23040,
    "cache_write": 0,
-   "turns": 5,
-   "tool_calls": 4,
-   "files_read": 0,
+   "turns": 10,
+   "tool_calls": 9,
+   "files_read": 1,
    "model": "glm-5.3"
   }
  ]
