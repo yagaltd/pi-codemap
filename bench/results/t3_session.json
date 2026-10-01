@@ -24,30 +24,30 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.96,
+     "p": 0.95,
      "model": "jev-latest",
-     "effort_ok": 0.49,
+     "effort_ok": 0.48,
      "tiers": null
     },
     {
      "event": "router_turn",
      "decision": "logged",
-     "effort_ok": 0.49,
+     "effort_ok": 0.5,
      "model": "jev-latest"
     }
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 13.7,
-   "tokens_in": 4009,
-   "req1_in": 1795,
-   "in_steady": 2214,
-   "tokens_out": 778,
-   "cache_read": 23232,
+   "wall_s": 14.0,
+   "tokens_in": 1980,
+   "req1_in": 3,
+   "in_steady": 1977,
+   "tokens_out": 840,
+   "cache_read": 22912,
    "cache_write": 0,
    "turns": 3,
    "tool_calls": 4,
-   "files_read": 2,
+   "files_read": 1,
    "model": "glm-5.3"
   }
  ]
