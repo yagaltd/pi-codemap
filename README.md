@@ -70,12 +70,9 @@ Commands: `/codemap:status` — map size, snapshot budget, watcher, Jev wiring.
 
 ## Variants
 
-Entry directories are benchmark configurations, not separate products:
-
-- `pi-codemap-v1` — map + `codemap_search` + `codemap_locate`
-- `pi-codemap-v2` — v1 + `codemap_edit_symbol` (legacy precise-edit tool)
-- `pi-codemap-v11` — v1 + Jev router/gate/rescue
-- `pi-codemap-v12` — v11 + guarded `edit` override **(default, what the install loads)**
+`index.ts` is the shipped extension (map + tools + guarded `edit` + Jev).
+`bench/configs/*.ts` hold the A/B variants the benchmark compares against
+(v1 = map+tools, v2 = +`codemap_edit_symbol`, v11 = +Jev, v12 = +edit guard).
 
 ## Bench
 

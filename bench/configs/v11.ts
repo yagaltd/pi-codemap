@@ -4,7 +4,7 @@
  *  - gate:   Jev re-ranks only doubtful codemap_search shortlists
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { createCodemapExtension } from "../ext/extension.ts";
+import { createCodemapExtension } from "../../ext/extension.ts";
 
 export default function codemapV11(pi: ExtensionAPI) {
 	createCodemapExtension(pi, { editTool: false, jev: true });

@@ -3,7 +3,7 @@
  * locate, Buffer-domain splice, reparse validation, and rollback.
  */
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { createCodemapExtension } from "../ext/extension.ts";
+import { createCodemapExtension } from "../../ext/extension.ts";
 
 export default function codemapV2(pi: ExtensionAPI) {
 	createCodemapExtension(pi, { editTool: true });
