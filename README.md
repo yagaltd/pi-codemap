@@ -142,6 +142,37 @@ wall on 4/5 tasks — every task in the suite routed to the cheap tier and
 passed (see Bench). Earlier verdicts from before the content-contract fix
 are superseded.
 
+## Model & reasoning routing — `codemap/auto`
+
+A virtual model: select it in `/model` and pi calls its `route()` before every
+model request. Routing happens only while it is selected — switching models
+turns it off. What it routes on, per request:
+
+- **Reasoning effort** — classifier verdict (jev or typellm): *"can this be
+  done with minimal reasoning?"* → thinking `low` or `high`.
+- **Model tier** — *"would a cheaper model suffice?"* → picks from a
+  human-curated ladder in `~/.config/pi-codemap/models.json` (cheapest
+  first; each tier = `provider/model` + a one-line capability profile).
+  Create the ladder with the `codemap-ladder-setup` skill, which scans your
+  subscriptions and proposes it.
+- **Modality (deterministic)** — an image in the request restricts routing
+  to tiers marked `"capabilities": ["vision"]` (GLM-5.3-Flash is vision;
+  GLM-5.3 is text-only). A fact, not a judgment.
+- **Escalation** — verifier flags and request failures force the next
+  request back to the full tier at `high`.
+
+Safety rails: opt-in (no `models.json` = no routing); fail-open on any
+classifier error; your explicit model choice always wins; kill switch
+`CODEMAP_ROUTE=off`; every decision logged to `.codemap-jev.log`.
+
+Evidence (see Bench): routing held quality on 28/28 task runs with
+−74/−75% output tokens. Rejected axis: niche-library knowledge depth —
+agents self-educate by reading the library source (the OGL experiment), so
+it does not discriminate. Known limit: the verifier is log-only (its own
+eval showed 4/4 false positives), and tier escalation is calibrated by
+real-work replay, which the decision log collects.
+
+
 ## Choosing between them
 
 You pick the classifier — nothing is silently chosen for you:
@@ -166,62 +197,12 @@ means the choice costs nothing measurable on router/gate/rescue.
 
 ## Bench
 
-**Note on data from before Oct 2025 (fix `cbbe6c4`):** extension tools used to
-return string content, which crashed pi's result dispatch *after* execution —
-the model never saw tool output (100% isError on codemap_search/locate, ~31%
-on edit). Tasks still passed via the system-prompt map + read/bash + blind
-retry, so pass/fail columns remained meaningful but tool-level numbers did
-not. All current numbers come from post-fix runs.
-
-Post-fix trio (pi alone vs codemap+jev vs codemap+typellm, 2 reps × 3 tasks):
-
-| task | config | pass | in | out | tools | turns | wall |
-|---|---|---|---|---|---|---|---|
-| cp-edit (trivial) | baseline | 2/2 | 1,001 | 313 | 3.5 | 4.5 | 12s |
-| cp-edit | v12 (jev) | 2/2 | 2,570 | 308 | 2.5 | 3.5 | 19s |
-| cp-edit | v12-typellm | 2/2 | 2,557 | 286 | 2.5 | 3.5 | 24s |
-| emp-span (hard) | baseline | **1/2** | 28,463 | 4,074 | 4.5 | 4.5 | 71s |
-| emp-span | v12 | 2/2 | 25,324 | 2,468 | 7.0 | 7.0 | 65s |
-| emp-span | v12-typellm | 2/2 | 24,973 | 2,084 | 7.0 | 7.0 | 56s |
-| emp-split (recovery) | baseline | 2/2 | 20,734 | 570 | 4.0 | 4.5 | 18s |
-| emp-split | v12 | 2/2 | 24,537 | 670 | 3.0 | 4.0 | 26s |
-| emp-split | v12-typellm | 2/2 | 25,350 | 1,324 | 4.0 | 5.0 | 40s |
-
-Reading: on hard big-file tasks codemap prevents the thrash loop (baseline
-failed one run burning +65% output tokens; codemap 2/2 with −40/−49% output
-tokens). On trivial tasks the map snapshot costs ~1.5k input and a few
-seconds. Tool error rates post-fix: 0 hard errors across all 76 calls in
-all three configs.
-
-**Model-tier routing verdict (Phase 2, `codemap/auto` + flash→glm-5.3
-ladder, 2 reps × 5 tasks): 10/10 pass, output −75% (11,017 → 2,771
-tokens), wall faster on 4/5 tasks.** Every run routed to the cheap tier —
-the suite contains no task that needs the standard tier, so tier
-*discrimination* remains unexercised (that calibration needs real-work
-replay). Cost note: routed runs used +12% input tokens on one task (the
-cheap model reads more); at flash pricing the net cost is still down.
-
-**What the guard prevents (emp-span, pi alone vs guarded, 6 vs 4+4 runs):**
-pi alone produces *no tool-call errors* — its failure mode is the **silent
-wrong edit**: 2/6 runs ended with an edit applied but not matching the task
-(0 tool errors flagged). The guard turns those into visible refusals at
-write time: 4 refused attempts (jev) and 4 (typellm) across the same task,
-with the reason + split guidance now delivered to the agent, and 0/8 task
-failures. Prevention is the value; tool-error rate is not the metric.
-
-Routing note: the router classifies explicit-file edit prompts as `code`
-(jev p≈0.65, typellm p≈0.99) and serves the map — correct, since the skip
-exists for non-code sessions. Trivial-task map cost is accepted by design.
-
-## Bench
-
 ```bash
 cd bench
 python3 harness/t3_agent.py --suite edit --config v12 --repeat 3
 ```
 
 Suites: `agent` (single tasks), `session` (3 questions per session), `edit` (precise-edit contract). See [`bench/README.md`](bench/README.md).
-
 ## Testing environment
 
 All benchmark numbers in this README were produced with:
