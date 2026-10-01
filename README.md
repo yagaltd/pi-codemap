@@ -190,6 +190,18 @@ tokens). On trivial tasks the map snapshot costs ~1.5k input and a few
 seconds. Tool error rates post-fix: 0 hard errors across all 76 calls in
 all three configs.
 
+**What the guard prevents (emp-span, pi alone vs guarded, 6 vs 4+4 runs):**
+pi alone produces *no tool-call errors* — its failure mode is the **silent
+wrong edit**: 2/6 runs ended with an edit applied but not matching the task
+(0 tool errors flagged). The guard turns those into visible refusals at
+write time: 4 refused attempts (jev) and 4 (typellm) across the same task,
+with the reason + split guidance now delivered to the agent, and 0/8 task
+failures. Prevention is the value; tool-error rate is not the metric.
+
+Routing note: the router classifies explicit-file edit prompts as `code`
+(jev p≈0.65, typellm p≈0.99) and serves the map — correct, since the skip
+exists for non-code sessions. Trivial-task map cost is accepted by design.
+
 ## Bench
 
 ```bash
@@ -198,6 +210,21 @@ python3 harness/t3_agent.py --suite edit --config v12 --repeat 3
 ```
 
 Suites: `agent` (single tasks), `session` (3 questions per session), `edit` (precise-edit contract). See [`bench/README.md`](bench/README.md).
+
+## Testing environment
+
+All benchmark numbers in this README were produced with:
+
+- **Agent model**: Zhipu **GLM-5.3** (recorded as `glm-5.3` in bench rows).
+  Classifier engines: `jev-latest` (TypeSafe) and `typellm-latest`
+  (typellm.ai) as selected by `CODEMAP_CLASSIFIER`.
+- **[@sting8k/pi-vcc](https://github.com/sting8k/pi-vcc)** — deterministic
+  context compaction, so long sessions compact predictably instead of
+  model-dependently.
+- **[@tomooshi/condensed-milk-pi](https://github.com/tomooshi/condensed-milk-pi)**
+  — masks stale tool results in later turns (the `[cm-masked …]` markers),
+  keeping prompts cache-stable. Loaded identically in every bench run, so
+  comparisons stay fair.
 
 ## License
 
