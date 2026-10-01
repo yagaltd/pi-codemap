@@ -136,3 +136,76 @@ if (isMain) {
 			process.exit(1);
 		});
 }
+
+// ── classifier backend (parity with the Jev bool battery) ─────────────────
+
+export interface BoolQuestion {
+	type: "bool";
+	instructions: string;
+	criteria?: { true: string; false: string };
+}
+
+export interface ClassifierAnswer {
+	probability: number;
+}
+
+export interface ClassifierLike {
+	model?: string;
+	answers: Record<string, ClassifierAnswer>;
+}
+
+/** System One bool battery → TypeLLM schema (independent fields run in
+ * parallel server-side; probabilities via return_probabilities). */
+export function typellmQuestions(questions: Record<string, BoolQuestion>): Record<string, unknown> {
+	const out: Record<string, unknown> = {};
+	for (const [name, q] of Object.entries(questions)) {
+		let instructions = q.instructions;
+		if (q.criteria) instructions += ` Answer true: ${q.criteria.true} Answer false: ${q.criteria.false}`;
+		out[name] = { type: "boolean", instructions, return_probabilities: true };
+	}
+	return out;
+}
+
+/** TypeLLM result → {name: P(yes)}. Handles {value, probabilities} (the
+ * return_probabilities shape) and plain booleans; skips anything else. */
+export function typellmAnswers(resp: { result?: Record<string, unknown> }): Record<string, ClassifierAnswer> {
+	const out: Record<string, ClassifierAnswer> = {};
+	for (const [name, a] of Object.entries(resp.result ?? {})) {
+		if (typeof a === "boolean") {
+			out[name] = { probability: a ? 1 : 0 };
+		} else if (a && typeof a === "object") {
+			const probs = (a as { probabilities?: Record<string, number> }).probabilities;
+			const p = probs?.["true"] ?? probs?.["false"];
+			if (typeof p === "number") {
+				out[name] = { probability: probs?.["true"] !== undefined ? probs["true"] : 1 - probs!["false"] };
+			} else if (typeof (a as { value?: boolean }).value === "boolean") {
+				out[name] = { probability: (a as { value: boolean }).value ? 1 : 0 };
+			}
+		}
+	}
+	return out;
+}
+
+/** ClassifyFn-compatible backend over the TypeLLM API — null when no key.
+ * systemOne redacts the state before we see it; same fail-open contract
+ * (throw → systemOne returns null). */
+export function typellmClassifyFn(): ((state: unknown, questions: Record<string, BoolQuestion>) => Promise<ClassifierLike>) | null {
+	if (!typellmAvailable()) return null;
+	return async (state, questions) => {
+		const resp = await postGenerate(HOSTED_URL, loadKey(), {
+			context: typeof state === "string" ? state : JSON.stringify(state),
+			questions: typellmQuestions(questions),
+		});
+		return { model: String(resp.model ?? "typellm-latest"), answers: typellmAnswers(resp) };
+	};
+}
+
+/** Key present (file-first, env last)? */
+export function typellmAvailable(): boolean {
+	try {
+		loadKey();
+		return true;
+	} catch {
+		return false;
+	}
+}
