@@ -215,9 +215,10 @@ Suites: `agent` (single tasks), `session` (3 questions per session), `edit` (pre
 
 All benchmark numbers in this README were produced with:
 
-- **Agent model**: Zhipu **GLM-5.3** (recorded as `glm-5.3` in bench rows).
-  Classifier engines: `jev-latest` (TypeSafe) and `typellm-latest`
-  (typellm.ai) as selected by `CODEMAP_CLASSIFIER`.
+- **Agent model**: Zhipu **GLM-5.3** at thinking level `high`
+  (`zai/glm-5.3`, recorded as `glm-5.3` in bench rows). Classifier
+  engines: `jev-latest` (TypeSafe) and `typellm-latest` (typellm.ai) as
+  selected by `CODEMAP_CLASSIFIER`.
 - **[@sting8k/pi-vcc](https://github.com/sting8k/pi-vcc)** — deterministic
   context compaction, so long sessions compact predictably instead of
   model-dependently.
