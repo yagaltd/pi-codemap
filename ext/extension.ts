@@ -26,8 +26,10 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { classifySpan, gateShortlist, gateTriggered, hasClassifier, resetClassifyFn, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
-import { defaultKeyFile, loadKey, typellmAvailable, typellmBatchRisk, typellmClassifyFn, typellmSpanGuidance, writeKeyFile } from "./typellm.ts";
+import { classifySpan, gateShortlist, gateTriggered, hasClassifier, loadRoutingTiers, resetClassifyFn, routeFirstPrompt, routeDecision, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
+import { defaultKeyFile, loadKey, postGenerate, typellmAvailable, typellmBatchRisk, typellmClassifyFn, typellmSpanGuidance, writeKeyFile } from "./typellm.ts";
+import { jevVerifyEdit } from "./jev.ts";
+import { typellmVerifyEdit } from "./typellm.ts";
 import { promptForApiKey } from "./typellm-ui.ts";
 
 
@@ -516,6 +518,10 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		moduleWireClassifier = wireClassifier;
 	}
 
+	let routedLowThisTurn = false;
+	let escalateNext = false;
+	let lastUserPrompt = "";
+
 	function classifierFile(): string {
 		return path.join(os.homedir(), ".config", "pi-codemap", "classifier");
 	}
@@ -538,6 +544,62 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 	function envClassifier(): "jev" | "typellm" | null {
 		const v = (process.env.CODEMAP_CLASSIFIER ?? "").trim().toLowerCase();
 		return v === "jev" || v === "typellm" ? v : null;
+	}
+
+	/** Effort + cheaper verdict for one prompt, via the active backend. */
+	let verdictCache = new Map<string, { effortOk: boolean; cheaperOk: boolean | null; p: number }>();
+	async function effortVerdict(prompt: string, signal?: AbortSignal): Promise<{ effortOk: boolean; cheaperOk: boolean | null; p: number } | null> {
+		const key = prompt.slice(0, 2000);
+		const hit = verdictCache.get(key);
+		if (hit) return hit;
+		const tiers = loadRoutingTiers();
+		const cheaperQuestion = tiers
+			? {
+					type: "bool" as const,
+					instructions: `Would a cheaper, less capable model complete this task correctly? Cheaper tiers available: ${Object.keys(tiers).join(", ")}.`,
+					criteria: { true: "Yes — the cheap tier suffices for a correct result.", false: "No — this needs the full-capability model." },
+				}
+			: null;
+		try {
+			if (activeBackend === "typellm") {
+				const questions: Record<string, unknown> = {
+					effort: {
+						type: "boolean",
+						instructions: "Could this task be completed correctly with MINIMAL reasoning effort — a mechanical change with an obvious, well-defined solution and no subtle interactions?",
+						return_probabilities: true,
+					},
+				};
+				if (cheaperQuestion) questions.cheaper = { type: "boolean", instructions: cheaperQuestion.instructions, return_probabilities: true };
+				const resp = await postGenerate("https://api.typellm.ai", loadKey(), { context: prompt.slice(0, 4000), questions });
+				const p = (k: string): number => {
+					const a = (resp.result ?? {})[k];
+					if (typeof a === "boolean") return a ? 1 : 0;
+					if (a && typeof a === "object") {
+						const pr = (a as { probabilities?: Record<string, number> }).probabilities;
+						if (pr && typeof pr["true"] === "number") return pr["true"];
+					}
+					return 0;
+				};
+				const out = { effortOk: p("effort") >= 0.5, cheaperOk: cheaperQuestion ? p("cheaper") >= 0.5 : null, p: p("effort") };
+				verdictCache.set(key, out);
+				return out;
+			}
+			const questions: Record<string, { type: "bool"; instructions: string; criteria?: { true: string; false: string } }> = {
+				effort: {
+					type: "bool",
+					instructions: "Could this task be completed correctly with MINIMAL reasoning effort — a mechanical change with an obvious, well-defined solution and no subtle interactions?",
+					criteria: { true: "Yes — mechanical/obvious; minimal reasoning suffices.", false: "No — it needs substantial reasoning." },
+				},
+			};
+			if (cheaperQuestion) questions.cheaper = cheaperQuestion as { type: "bool"; instructions: string; criteria: { true: string; false: string } };
+			const sr = await systemOne(prompt.slice(0, 4000), questions);
+			if (!sr) return null;
+			const out = { effortOk: (sr.answers.effort ?? 0) >= 0.5, cheaperOk: cheaperQuestion ? (sr.answers.cheaper ?? 0) >= 0.5 : null, p: sr.answers.effort ?? 0 };
+			verdictCache.set(key, out);
+			return out;
+		} catch {
+			return null;
+		}
 	}
 
 	function jevLog(e: Record<string, unknown>): void {
@@ -811,6 +873,26 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					if (g) detail += ` Why: ${g.reason} Suggested split: ${g.split}`;
 				}
 				st.mapDirty = true;
+				// Verifier is LOG-ONLY (2b finding: 4/4 false positives on good
+				// diffs — both engines fire "dropped behavior" on structural
+				// edits with hallucinated reasons). Auto-escalation requires
+				// explicit opt-in until the verifier is recalibrated.
+				if (routedLowThisTurn && activeBackend && process.env.CODEMAP_ROUTE !== "off" && process.env.CODEMAP_VERIFY_ESCALATE === "on") {
+					try {
+						const diff = r.detail;
+						const req = lastUserPrompt;
+						const v = activeBackend === "typellm"
+							? await typellmVerifyEdit({ request: req, diff })
+							: await jevVerifyEdit({ request: req, diff });
+						jevLog({ event: "edit_verify", fired: v?.fired ?? null, signals: v?.signals, why: v?.why });
+						if (v?.fired) {
+							escalateNext = true;
+							detail += ` Verification flagged this low-effort edit (${v.why}) — re-check it carefully or redo it with more reasoning.`;
+						}
+					} catch {
+						/* verifier failure fails open */
+					}
+				}
 				return { content: [{ type: "text", text: detail }] };
 				} catch (e) {
 					jevLog({ event: "edit_guard", decision: "crashed", error: String(e).slice(0, 160) });
@@ -865,6 +947,64 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			}
 		},
 	});
+
+	// Routing Phase 2a: opt-in virtual model. Enable = select codemap/auto in
+	// /model (and create ~/.config/pi-codemap/models.json with >=2 tiers).
+	// route() runs per model call: effort verdict per user turn -> thinking
+	// low/high on the tier model; verifier fire (routed edits) escalates the
+	// NEXT request to high via router state. Kill switch: CODEMAP_ROUTE=off
+	// or delete models.json (then this model is not registered at all).
+	if (loadRoutingTiers() && process.env.CODEMAP_ROUTE !== "off") {
+		const tiers = loadRoutingTiers()!;
+		const labels = Object.keys(tiers);
+		const parseModel = (ref: string): { provider: string; id: string } | null => {
+			const i = ref.indexOf("/");
+			return i > 0 ? { provider: ref.slice(0, i), id: ref.slice(i + 1) } : null;
+		};
+		type AutoState = { escalated?: boolean };
+		pi.registerVirtualModel<AutoState>({
+			provider: "codemap",
+			id: "auto",
+			name: "Auto (codemap routed)",
+			thinkingLevels: ["low", "high"],
+			async route(request, ctx) {
+				const wire = (thinking: "low" | "high", tier: string, state?: AutoState) => {
+					const m = parseModel(tiers[tier]?.model ?? "");
+					const model = m ? ctx.modelRegistry.find(m.provider, m.id) : undefined;
+					if (!model) return undefined;
+					return { model, thinkingLevel: thinking, state };
+				};
+				// Sticky follow-ups (tool calls, retries) stay put; escalation wins.
+				if (request.reason !== "user") {
+					const sticky = request.failed ?? request.previous;
+					if (sticky) return { model: sticky.model, thinkingLevel: sticky.thinkingLevel ?? "high" };
+				}
+				if (request.state?.escalated || escalateNext) {
+					escalateNext = false;
+					return wire("high", labels[labels.length - 1], { escalated: false });
+				}
+				// Effort verdict for this user turn (classifier = active backend).
+				const prompt = request.messages.filter((mm: { role: string }) => mm.role === "user").at(-1);
+				const text = typeof (prompt as { content?: unknown })?.content === "string"
+					? (prompt as { content: string }).content
+					: JSON.stringify((prompt as { content?: unknown })?.content ?? "");
+				lastUserPrompt = text;
+				const effort = await effortVerdict(text, request.signal);
+				const decision = routeDecision({
+					effortOk: effort?.effortOk ?? null,
+					cheaperOk: effort?.cheaperOk ?? null,
+					tiers: labels,
+					current: labels[labels.length - 1],
+					userOverride: false,
+				});
+				routedLowThisTurn = decision.thinking === "low";
+				const wired = wire(decision.thinking ?? "high", decision.tier ?? labels[labels.length - 1]);
+				if (!wired) return { model: request.previous?.model ?? ctx.model, thinkingLevel: "high" };
+				jevLog({ event: "route", thinking: decision.thinking, tier: decision.tier, reason: decision.reason, effort: effort });
+				return wired;
+			},
+		});
+	}
 
 	pi.registerCommand("codemap:status", {
 		description: "Show code-map state (files, snapshot, watcher)",

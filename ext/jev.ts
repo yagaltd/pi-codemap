@@ -327,3 +327,48 @@ const questions: Record<string, BoolQuestion> = {};
 	log?.({ event: "gate", decision: "fired", p: cands.map((_, i) => r.answers[`c${i}`] ?? 0), model: r.model });
 	return cands.map((_, i) => r.answers[`c${i}`] ?? 0);
 }
+
+// ── routed-edit verifier (jev bool battery) ───────────────────────────────
+
+export interface JevVerifyResult { fired: boolean; why: string; signals: Record<string, number> }
+
+/** Jev verifier for a routed (low-effort) edit: three Noul P(wrong) questions
+ * in one call. No DAG — the why is generic (engine limitation). Null = fail
+ * open (edit stands, nothing logged as fired). */
+export async function jevVerifyEdit(opts: {
+	request: string;
+	diff: string;
+}): Promise<JevVerifyResult | null> {
+	try {
+		const r = await systemOne(
+			`User request:\n${redactSend(opts.request).slice(0, 800)}\n\nApplied diff:\n${redactSend(opts.diff).slice(0, 2400)}`,
+			{
+				incomplete: {
+					type: "bool",
+					instructions: "Does the diff FAIL to accomplish what the user requested?",
+					criteria: { true: "Yes — the request is not accomplished.", false: "No — the request is accomplished." },
+				},
+				unrelated: {
+					type: "bool",
+					instructions: "Does the diff touch code unrelated to the request?",
+					criteria: { true: "Yes — unrelated code is touched.", false: "No — only requested scope." },
+				},
+				dropped: {
+					type: "bool",
+					instructions: "Does the diff drop or break existing behavior that the request did not ask to change?",
+					criteria: { true: "Yes — behavior is dropped or broken.", false: "No — existing behavior preserved." },
+				},
+			},
+		);
+		if (!r) return null;
+		const signals = {
+			incomplete: r.answers.incomplete ?? 0,
+			unrelated: r.answers.unrelated ?? 0,
+			dropped: r.answers.dropped ?? 0,
+		};
+		const fired = Object.values(signals).some((v) => v >= 0.7);
+		return { fired, why: fired ? "verifier signals fired" : "ok", signals };
+	} catch {
+		return null;
+	}
+}

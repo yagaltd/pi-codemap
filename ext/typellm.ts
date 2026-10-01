@@ -307,3 +307,60 @@ export function typellmAvailable(): boolean {
 		return false;
 	}
 }
+
+// ── routed-edit verifier (DAG: fire signal + why in one call) ─────────────
+
+export interface VerifyResult { fired: boolean; why: string; signals: Record<string, number> }
+
+/** TypeLLM verifier for a routed (low-effort) edit: three independent
+ * P(wrong) roots; why ∷roots only explains when something fired. One call. */
+export async function typellmVerifyEdit(opts: {
+	request: string;
+	diff: string;
+}): Promise<VerifyResult | null> {
+	try {
+		const context = redactSend(`User request:\n${opts.request.slice(0, 800)}\n\nApplied diff:\n${opts.diff.slice(0, 2400)}`);
+		const resp = await postGenerate(HOSTED_URL, loadKey(), {
+			context,
+			questions: {
+				incomplete: {
+					type: "boolean",
+					instructions: "Does the diff FAIL to accomplish what the user requested?",
+					return_probabilities: true,
+				},
+				unrelated: {
+					type: "boolean",
+					instructions: "Does the diff touch code unrelated to the request?",
+					return_probabilities: true,
+				},
+				dropped: {
+					type: "boolean",
+					instructions: "Does the diff drop or break existing behavior that the request did not ask to change?",
+					return_probabilities: true,
+				},
+				why: {
+					type: "string",
+					depends_on: ["incomplete", "unrelated", "dropped"],
+					instructions: "If any signal above fired, one sentence on the main problem and what to re-check. Otherwise exactly 'ok'.",
+				},
+			},
+		});
+		const r = resp.result ?? {};
+		const p = (k: string): number => {
+			const a = r[k];
+			if (typeof a === "boolean") return a ? 1 : 0;
+			if (a && typeof a === "object") {
+				const pr = (a as { probabilities?: Record<string, number> }).probabilities;
+				if (pr && typeof pr["true"] === "number") return pr["true"];
+				if (typeof (a as { value?: boolean }).value === "boolean") return (a as { value: boolean }).value ? 1 : 0;
+			}
+			return 0;
+		};
+		const signals = { incomplete: p("incomplete"), unrelated: p("unrelated"), dropped: p("dropped") };
+		const fired = Object.values(signals).some((v) => v >= 0.7);
+		const why = typeof r.why === "string" ? r.why : "ok";
+		return { fired, why, signals };
+	} catch {
+		return null;
+	}
+}
