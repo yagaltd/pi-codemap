@@ -126,10 +126,11 @@ per-field thinking (with reasoning traces), image input and `depends_on`
 decision graphs. Not wired into the extension yet — this ships the credential
 plumbing so pi-codemap gets its own identity:
 
-- key file: `~/.config/pi-codemap/typellm.key` (chmod 600)
-- setup: `npx tsx ext/typellm.ts setup` (paste or pipe the `tl-sk-…` key)
-- verify: `npx tsx ext/typellm.ts verify` — one live call proving
-  string/number/boolean/enum answers
+- setup: run `/codemap:login-typellm` inside pi — masked input, saves to
+  `~/.config/pi-codemap/typellm.key` (chmod 600)
+- status: `/codemap:status` shows `typellm wired/off`
+- verify (from a clone): `npx tsx ext/typellm.ts verify` — one live call
+  proving string/number/boolean/enum answers
 
 Key chain is **file first, `TYPELLM_API_KEY` env last** (inverted from
 mailbox-parser on purpose: a global env key must not silently override the
