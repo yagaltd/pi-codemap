@@ -28,10 +28,10 @@ import common as C
 # v1/v2 rows activate when the extension exists at these paths.
 CONFIGS = {
     "baseline": [],
-    "v1": ["--extension", os.path.join(C.BENCH, "configs", "v1")],
-    "v2": ["--extension", os.path.join(C.BENCH, "configs", "v2")],
-    "v11": ["--extension", os.path.join(C.BENCH, "configs", "v11")],
-    "v12": ["--extension", os.path.join(C.BENCH, "configs", "v12")],
+    "v1": ["--extension", os.path.join(C.BENCH, "configs", "v1.ts")],
+    "v2": ["--extension", os.path.join(C.BENCH, "configs", "v2.ts")],
+    "v11": ["--extension", os.path.join(C.BENCH, "configs", "v11.ts")],
+    "v12": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts")],
 }
 
 
