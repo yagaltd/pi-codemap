@@ -25,7 +25,7 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.72,
+     "p": 0.77,
      "model": "jev-latest"
     },
     {
@@ -50,12 +50,12 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 38.0,
-   "tokens_in": 25391,
-   "req1_in": 21736,
-   "in_steady": 3655,
-   "tokens_out": 1355,
-   "cache_read": 26240,
+   "wall_s": 38.6,
+   "tokens_in": 4646,
+   "req1_in": 40,
+   "in_steady": 4606,
+   "tokens_out": 1954,
+   "cache_read": 27136,
    "cache_write": 0,
    "turns": 8,
    "tool_calls": 7,
@@ -84,7 +84,7 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.71,
+     "p": 0.72,
      "model": "jev-latest"
     },
     {
@@ -109,15 +109,127 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 50.7,
-   "tokens_in": 26455,
-   "req1_in": 21736,
-   "in_steady": 4719,
-   "tokens_out": 2293,
-   "cache_read": 27008,
+   "wall_s": 29.9,
+   "tokens_in": 3968,
+   "req1_in": 40,
+   "in_steady": 3928,
+   "tokens_out": 1330,
+   "cache_read": 26432,
    "cache_write": 0,
    "turns": 8,
    "tool_calls": 7,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 2,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-2.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-2"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.76,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 27.8,
+   "tokens_in": 24796,
+   "req1_in": 21736,
+   "in_steady": 3060,
+   "tokens_out": 714,
+   "cache_read": 25792,
+   "cache_write": 0,
+   "turns": 5,
+   "tool_calls": 4,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 3,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-3.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-3"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.76,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_called"
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 47.0,
+   "tokens_in": 26293,
+   "req1_in": 21736,
+   "in_steady": 4557,
+   "tokens_out": 1796,
+   "cache_read": 26944,
+   "cache_write": 0,
+   "turns": 9,
+   "tool_calls": 8,
    "files_read": 1,
    "model": "glm-5.3"
   }

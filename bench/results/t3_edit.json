@@ -40,7 +40,7 @@
       "sanitizeToolInputsStep",
       "isAbnormalFinish"
      ],
-     "ms": 1483
+     "ms": 1259
     },
     {
      "event": "edit_guard",
@@ -51,19 +51,25 @@
       "sanitizeToolInputsStep L116-129",
       "isAbnormalFinish L202-206"
      ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_called"
     }
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 35.8,
-   "tokens_in": 25210,
-   "req1_in": 21744,
-   "in_steady": 3466,
-   "tokens_out": 1398,
-   "cache_read": 26048,
+   "wall_s": 67.4,
+   "tokens_in": 5946,
+   "req1_in": 48,
+   "in_steady": 5898,
+   "tokens_out": 3217,
+   "cache_read": 28352,
    "cache_write": 0,
-   "turns": 5,
-   "tool_calls": 4,
+   "turns": 9,
+   "tool_calls": 8,
    "files_read": 1,
    "model": "glm-5.3"
   },
@@ -105,7 +111,72 @@
       "sanitizeToolInputsStep",
       "isAbnormalFinish"
      ],
-     "ms": 787
+     "ms": 1329
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "typellm",
+   "wall_s": 26.7,
+   "tokens_in": 3485,
+   "req1_in": 48,
+   "in_steady": 3437,
+   "tokens_out": 1037,
+   "cache_read": 25984,
+   "cache_write": 0,
+   "turns": 5,
+   "tool_calls": 4,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-typellm",
+   "repeat": 2,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-2.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-2"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.9770226311771717,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "batch_risk",
+     "scope": "cross_cutting",
+     "risk": 0.5,
+     "why": "ok",
+     "ops": 2,
+     "symbols": [
+      "sanitizeToolInputsStep",
+      "isAbnormalFinish"
+     ],
+     "ms": 718
     },
     {
      "event": "edit_guard",
@@ -119,19 +190,87 @@
     },
     {
      "event": "edit_called"
+    },
+    {
+     "event": "edit_called"
     }
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 44.6,
-   "tokens_in": 23811,
+   "wall_s": 35.3,
+   "tokens_in": 25650,
    "req1_in": 21744,
-   "in_steady": 2067,
-   "tokens_out": 1135,
-   "cache_read": 24512,
+   "in_steady": 3906,
+   "tokens_out": 1361,
+   "cache_read": 26560,
    "cache_write": 0,
    "turns": 8,
-   "tool_calls": 8,
+   "tool_calls": 7,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-typellm",
+   "repeat": 3,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-3.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-3"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.9770226311771717,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "batch_risk",
+     "scope": "cross_cutting",
+     "risk": 0.5,
+     "why": "ok",
+     "ops": 2,
+     "symbols": [
+      "sanitizeToolInputsStep",
+      "isAbnormalFinish"
+     ],
+     "ms": 688
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "typellm",
+   "wall_s": 27.2,
+   "tokens_in": 25602,
+   "req1_in": 21744,
+   "in_steady": 3858,
+   "tokens_out": 1357,
+   "cache_read": 26496,
+   "cache_write": 0,
+   "turns": 6,
+   "tool_calls": 6,
    "files_read": 1,
    "model": "glm-5.3"
   },
@@ -141,8 +280,8 @@
    "kind": "edit",
    "config": "v12-typellm",
    "repeat": 0,
-   "success": true,
-   "why": "adapted edit landed, single file",
+   "success": false,
+   "why": "needle missing (adapted edit never landed)",
    "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
@@ -161,42 +300,19 @@
      "decision": "code",
      "p": 0.9971990728039681,
      "model": "typellm-latest"
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "refused_span",
-     "file": "src/core/tools/project.ts",
-     "symbols": [
-      "detectJsPm",
-      "readPackageScripts",
-      "pkg",
-      "detectJsLinter"
-     ],
-     "span": [
-      385,
-      396
-     ]
-    },
-    {
-     "event": "dag_guidance",
-     "ok": true,
-     "kind": "coherent_pair"
     }
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 100.4,
-   "tokens_in": 28413,
-   "req1_in": 21754,
-   "in_steady": 6659,
-   "tokens_out": 5643,
-   "cache_read": 29312,
+   "wall_s": 50.2,
+   "tokens_in": 3929,
+   "req1_in": 58,
+   "in_steady": 3871,
+   "tokens_out": 3395,
+   "cache_read": 24000,
    "cache_write": 0,
-   "turns": 11,
-   "tool_calls": 12,
+   "turns": 5,
+   "tool_calls": 5,
    "files_read": 1,
    "model": "glm-5.3"
   },
@@ -253,14 +369,144 @@
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 75.6,
-   "tokens_in": 27070,
-   "req1_in": 21754,
-   "in_steady": 5316,
-   "tokens_out": 4475,
-   "cache_read": 27968,
+   "wall_s": 83.6,
+   "tokens_in": 5852,
+   "req1_in": 58,
+   "in_steady": 5794,
+   "tokens_out": 4820,
+   "cache_read": 28608,
    "cache_write": 0,
-   "turns": 8,
+   "turns": 7,
+   "tool_calls": 7,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-span",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-typellm",
+   "repeat": 2,
+   "success": true,
+   "why": "adapted edit landed, single file",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-2.jsonl",
+   "codemap_tools": [
+    "codemap_locate"
+   ],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-2"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.9971990735661372,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "refused_span",
+     "file": "src/core/tools/project.ts",
+     "symbols": [
+      "detectJsPm",
+      "readPackageScripts",
+      "pkg",
+      "detectJsLinter"
+     ],
+     "span": [
+      385,
+      396
+     ]
+    },
+    {
+     "event": "dag_guidance",
+     "ok": true,
+     "kind": "unclear"
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "typellm",
+   "wall_s": 39.7,
+   "tokens_in": 24566,
+   "req1_in": 21754,
+   "in_steady": 2812,
+   "tokens_out": 2318,
+   "cache_read": 25792,
+   "cache_write": 0,
+   "turns": 7,
+   "tool_calls": 7,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-span",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-typellm",
+   "repeat": 3,
+   "success": true,
+   "why": "adapted edit landed, single file",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-3.jsonl",
+   "codemap_tools": [
+    "codemap_locate"
+   ],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-3"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.9971990735661372,
+     "model": "typellm-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "refused_span",
+     "file": "src/core/tools/project.ts",
+     "symbols": [
+      "detectJsPm",
+      "readPackageScripts",
+      "pkg",
+      "detectJsLinter"
+     ],
+     "span": [
+      385,
+      396
+     ]
+    },
+    {
+     "event": "dag_guidance",
+     "ok": true,
+     "kind": "coherent_pair"
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "typellm",
+   "wall_s": 46.9,
+   "tokens_in": 25111,
+   "req1_in": 21754,
+   "in_steady": 3357,
+   "tokens_out": 2808,
+   "cache_read": 26176,
+   "cache_write": 0,
+   "turns": 7,
    "tool_calls": 8,
    "files_read": 1,
    "model": "glm-5.3"
@@ -279,6 +525,65 @@
     {
      "event": "ext_loaded",
      "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-0"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.77,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_called"
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 38.6,
+   "tokens_in": 4646,
+   "req1_in": 40,
+   "in_steady": 4606,
+   "tokens_out": 1954,
+   "cache_read": 27136,
+   "cache_write": 0,
+   "turns": 8,
+   "tool_calls": 7,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 1,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-1.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-1"
     },
     {
      "event": "init_done",
@@ -312,12 +617,12 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 38.0,
-   "tokens_in": 25391,
-   "req1_in": 21736,
-   "in_steady": 3655,
-   "tokens_out": 1355,
-   "cache_read": 26240,
+   "wall_s": 29.9,
+   "tokens_in": 3968,
+   "req1_in": 40,
+   "in_steady": 3928,
+   "tokens_out": 1330,
+   "cache_read": 26432,
    "cache_write": 0,
    "turns": 8,
    "tool_calls": 7,
@@ -329,15 +634,15 @@
    "repo": "empryo",
    "kind": "edit",
    "config": "v12",
-   "repeat": 1,
+   "repeat": 2,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-1.jsonl",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-2.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-1"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-2"
     },
     {
      "event": "init_done",
@@ -346,7 +651,60 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.71,
+     "p": 0.76,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 27.8,
+   "tokens_in": 24796,
+   "req1_in": 21736,
+   "in_steady": 3060,
+   "tokens_out": 714,
+   "cache_read": 25792,
+   "cache_write": 0,
+   "turns": 5,
+   "tool_calls": 4,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-split",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 3,
+   "success": true,
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-3.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-3"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.76,
      "model": "jev-latest"
     },
     {
@@ -371,15 +729,15 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 50.7,
-   "tokens_in": 26455,
+   "wall_s": 47.0,
+   "tokens_in": 26293,
    "req1_in": 21736,
-   "in_steady": 4719,
-   "tokens_out": 2293,
-   "cache_read": 27008,
+   "in_steady": 4557,
+   "tokens_out": 1796,
+   "cache_read": 26944,
    "cache_write": 0,
-   "turns": 8,
-   "tool_calls": 7,
+   "turns": 9,
+   "tool_calls": 8,
    "files_read": 1,
    "model": "glm-5.3"
   },
@@ -399,6 +757,64 @@
     {
      "event": "ext_loaded",
      "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-0"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.91,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "refused_span",
+     "file": "src/core/tools/project.ts",
+     "symbols": [
+      "detectJsPm",
+      "readPackageScripts",
+      "pkg",
+      "detectJsLinter"
+     ],
+     "span": [
+      385,
+      396
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 49.4,
+   "tokens_in": 4122,
+   "req1_in": 50,
+   "in_steady": 4072,
+   "tokens_out": 3342,
+   "cache_read": 26688,
+   "cache_write": 0,
+   "turns": 7,
+   "tool_calls": 8,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-span",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 1,
+   "success": true,
+   "why": "adapted edit landed, single file",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-1.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-1"
     },
     {
      "event": "init_done",
@@ -431,14 +847,74 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 61.7,
-   "tokens_in": 25980,
-   "req1_in": 21810,
-   "in_steady": 4170,
-   "tokens_out": 3366,
-   "cache_read": 26880,
+   "wall_s": 45.7,
+   "tokens_in": 3177,
+   "req1_in": 50,
+   "in_steady": 3127,
+   "tokens_out": 2534,
+   "cache_read": 26048,
    "cache_write": 0,
-   "turns": 9,
+   "turns": 7,
+   "tool_calls": 6,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-span",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12",
+   "repeat": 2,
+   "success": true,
+   "why": "adapted edit landed, single file",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-2.jsonl",
+   "codemap_tools": [
+    "codemap_locate"
+   ],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-2"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.91,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "refused_span",
+     "file": "src/core/tools/project.ts",
+     "symbols": [
+      "detectJsPm",
+      "readPackageScripts",
+      "pkg",
+      "detectJsLinter"
+     ],
+     "span": [
+      385,
+      396
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 50.4,
+   "tokens_in": 25344,
+   "req1_in": 21746,
+   "in_steady": 3598,
+   "tokens_out": 2715,
+   "cache_read": 26176,
+   "cache_write": 0,
+   "turns": 8,
    "tool_calls": 9,
    "files_read": 1,
    "model": "glm-5.3"
@@ -448,25 +924,59 @@
    "repo": "empryo",
    "kind": "edit",
    "config": "v12",
-   "repeat": 1,
+   "repeat": 3,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-1.jsonl",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-3.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
-   "jev_events": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-3"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.9,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "refused_span",
+     "file": "src/core/tools/project.ts",
+     "symbols": [
+      "detectJsPm",
+      "readPackageScripts",
+      "pkg",
+      "detectJsLinter",
+      "has"
+     ],
+     "span": [
+      384,
+      397
+     ]
+    }
+   ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 86.7,
-   "tokens_in": 27344,
+   "wall_s": 42.9,
+   "tokens_in": 24943,
    "req1_in": 21746,
-   "in_steady": 5598,
-   "tokens_out": 4685,
-   "cache_read": 28096,
+   "in_steady": 3197,
+   "tokens_out": 2638,
+   "cache_read": 26048,
    "cache_write": 0,
-   "turns": 9,
-   "tool_calls": 9,
+   "turns": 8,
+   "tool_calls": 8,
    "files_read": 1,
    "model": "glm-5.3"
   },

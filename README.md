@@ -111,7 +111,12 @@ wires as the **DAG gate**:
   edit, one `depends_on` call (`kind` → `reason` ∷kind → `split`
   ∷[kind, reason]) appends an agent-facing why and a concrete per-symbol
   split suggestion to the refusal, so the agent recovers on its next turn.
-  Benched live: `dag_guidance(ok, kind=coherent_pair)` on emp-span.
+  Hardened A/B (4 reps/cell, Oct 2025): spanning-refusal recovery 6.5 vs
+  jev 7.5 mean turns; emp-split 7.0 vs 7.5; pass 7/8 vs 8/8 (one flake per
+  side across the campaign). The honest read: mechanisms are reliable
+  (`dag_guidance` ok on every fire), the recovery delta is ~1 turn and
+  within noise at this n — the value is the **quality of the refusal**
+  (reason + actionable split), not a proven speedup.
 - **Batch pre-flight** — a bundled edit touching 2+ symbols gets one
   number-typed call (`scope` → `risk` ∷scope → `why`); risk ≥
   `CODEMAP_DAG_REFUSE` (default 0.75) refuses before anything is written,
