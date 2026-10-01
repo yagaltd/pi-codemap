@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { classifySpan, gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
+import { typellmAnswers, typellmQuestions } from "./typellm.ts";
 
 // TRIVIAL_RE: high-precision only — these skip for free
 assert.equal(isTrivialPrompt("run the tests"), true);
@@ -45,5 +46,15 @@ assert.deepEqual(classifySpan(SYMS, 20, 26).kind, "spanning", "end of a + start 
 assert.deepEqual(classifySpan(SYMS, 1, 5).kind, "free", "above all symbols");
 assert.deepEqual(classifySpan(SYMS, 21, 24).kind, "free", "gap between symbols");
 assert.deepEqual(classifySpan([], 1, 9).kind, "free");
+
+// TypeLLM provider mapping (pure parts)
+const tq = typellmQuestions({ a: { type: "bool", instructions: "Is it?", criteria: { true: "yes-ish", false: "no-ish" } }, b: { type: "bool", instructions: "Plain?" } });
+assert.deepEqual(tq.a, { type: "boolean", instructions: "Is it? Answer true: yes-ish Answer false: no-ish", return_probabilities: true });
+assert.deepEqual(tq.b, { type: "boolean", instructions: "Plain?", return_probabilities: true });
+const ta = typellmAnswers({ result: { p: { value: true, probabilities: { true: 0.87, false: 0.13 } }, q: false, r: { value: false }, junk: "not a verdict" } });
+assert.equal(ta.p.probability, 0.87, "probabilities shape");
+assert.equal(ta.q.probability, 0, "plain false");
+assert.equal(ta.r.probability, 0, "value-only false");
+assert.ok(!("junk" in ta), "non-boolean skipped");
 
 console.log("jev.selfcheck: all assertions passed");

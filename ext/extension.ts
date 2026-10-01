@@ -27,7 +27,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { classifySpan, gateShortlist, gateTriggered, hasClassifier, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
-import { defaultKeyFile, loadKey, writeKeyFile } from "./typellm.ts";
+import { defaultKeyFile, loadKey, typellmAvailable, typellmClassifyFn, writeKeyFile } from "./typellm.ts";
 import { promptForApiKey } from "./typellm-ui.ts";
 
 
@@ -88,15 +88,6 @@ function has(bin: string): boolean {
 /** Load-probe: independent of st/opts — proves this extension instance loaded. */
 /** Factory-scoped wiring, reachable from module-scope init(). */
 let moduleWireClassifier: ((ctx: ExtensionContext) => void) | null = null;
-
-function typellmAvailable(): boolean {
-	try {
-		loadKey();
-		return true;
-	} catch {
-		return false;
-	}
-}
 
 function typellmMasked(key: string): string {
 	const k = key.trim();
@@ -453,6 +444,9 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		getAvailableOfType(type: string): Promise<readonly unknown[]>;
 	};
 	let classifierWired = false;
+	let activeBackend: "jev" | "typellm" | null = null;
+	let availJev = false;
+	let availTypellm = false;
 	let onboardedKeyMissing = false;
 	/** Failed-search rescue results, cached per query for this session. */
 	const rescueCache = new Map<string, SearchHit[]>();
@@ -468,12 +462,28 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		filesIndexed: 0,
 	};
 
-	/** v12.1: hand pi's classifier registry to jev.ts (first context wins). */
+	/** Classifier backend: CODEMAP_CLASSIFIER=jev|typellm|auto (default auto =
+	 * Jev when pi has credentials, else TypeLLM when the key file exists,
+	 * else unwired). First context wins; idempotent. */
 	function wireClassifier(ctx: ExtensionContext | undefined): void {
 		if (classifierWired || !ctx) return;
+		const pref = (process.env.CODEMAP_CLASSIFIER ?? "auto").trim().toLowerCase();
 		const reg = (ctx as unknown as { modelRegistry?: MinimalRegistry }).modelRegistry;
-		if (!reg || typeof reg.classify !== "function") return;
+		availJev = !!(reg && typeof reg.classify === "function");
+		availTypellm = typellmAvailable();
+		const backend: "jev" | "typellm" | null =
+			pref === "typellm" ? (availTypellm ? "typellm" : null)
+			: pref === "jev" ? (availJev ? "jev" : null)
+			: availJev ? "jev" : availTypellm ? "typellm" : null;
+		if (!backend) return;
 		classifierWired = true;
+		activeBackend = backend;
+		if (backend === "typellm") {
+			const fn = typellmClassifyFn();
+			if (fn) setClassifyFn(fn as never);
+			moduleWireClassifier = wireClassifier;
+			return;
+		}
 		setClassifyFn(async (state, questions) => {
 			let model = reg.getModelOfType("classifier", "typesafe", "jev-latest");
 			if (!model) {
@@ -515,9 +525,9 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					/* treat as unavailable */
 				}
 			}
-			if (!available) {
+			if (!available && !typellmAvailable()) {
 				ctx.ui.notify(
-					"pi-codemap: Jev router/gate idle — no classifier credentials. Set TYPESAFE_API_KEY in the environment that starts pi, or /login with a Jev provider (OpenRouter, Cloudflare, Vercel, opencode). Everything else works without it.",
+					"pi-codemap: classifier idle — no Jev credentials and no TypeLLM key. Set TYPESAFE_API_KEY (or /login with a Jev provider), run /codemap:login-typellm, or set CODEMAP_CLASSIFIER=jev|typellm. Everything else works without it.",
 					"warning",
 				);
 			}
@@ -761,8 +771,9 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 	pi.registerCommand("codemap:status", {
 		description: "Show code-map state (files, snapshot, watcher)",
 		handler: async (_args, ctx) => {
+			wireClassifier(ctx as unknown as ExtensionContext);
 			const line = st.enabled
-				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · jev ${hasClassifier() ? "wired" : "off"} · typellm ${typellmAvailable() ? "wired" : "off"}`
+				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · classifier ${activeBackend ?? "none"} (jev ${availJev ? "ok" : "missing"}, typellm ${availTypellm ? "ok" : "missing"})`
 				: `disabled — ${st.reason}`;
 			if (ctx.hasUI) ctx.ui.notify(line, "info");
 			else console.log(line);
