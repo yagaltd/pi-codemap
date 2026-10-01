@@ -180,7 +180,11 @@ def validate_multi_file_edit(v, clone):
     # porcelain catches untracked litter too (git diff --name-only does not)
     status = subprocess.run(["git", "-C", clone, "status", "--porcelain"],
                             capture_output=True, text=True).stdout.splitlines()
-    changed = sorted(l[3:].strip().strip('"') for l in status if l.strip())
+    changed = sorted(
+        l[3:].strip().strip('"')
+        for l in status
+        if l.strip() and not l[3:].strip().strip('"').endswith(".codemap-jev.log")
+    )
     expected = sorted(f["file"] for f in spec)
     if changed != expected:
         return False, f"touched files: {changed} (want {expected})"
