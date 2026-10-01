@@ -74,6 +74,50 @@ Commands: `/codemap:status` — map size, snapshot budget, watcher, Jev wiring.
 `bench/configs/*.ts` hold the A/B variants the benchmark compares against
 (v1 = map+tools, v2 = +`codemap_edit_symbol`, v11 = +Jev, v12 = +edit guard).
 
+## Codemode: evaluated, not adopted
+
+pi ≥ 0.99 ships a `codemode` tool — the model writes JavaScript in a QuickJS sandbox and calls other tools from the script. We tested whether scripted edits beat direct tool calls for multi-file work (branch `codemode`, merged for its bench assets only).
+
+Setup: `v12-cm` config enables codemode (`-e builtin:codemode --tools read,bash,edit,write,codemode`); tasks `emp-multifile` (2 files), `emp-manyfile` (8 files) with `multi_file_edit` validator (porcelain-based, catches untracked scratch files); `codemode_calls` recorded per run.
+
+Results (8-file decider, warm cache):
+
+| task | config | result | in | out | tools | turns |
+|---|---|---|---|---|---|---|
+| emp-manyfile | v12 | PASS | 1,126 | 779 | 2 | 3 |
+| emp-manyfile-cm | v12-cm (steered) | PASS | 12,070 | 11,797 | 29 | **2** |
+
+Findings:
+
+1. **Unsteered, the model never uses codemode** — 0 script calls; it prefers direct tool calls even when codemode is available.
+2. **Steered, it works and the guards hold** — 11 `edit_guard applied` events across scripted edits (parse-safety + symbol containment enforced on every nested call).
+3. **But it costs ~10× more tokens** — script authoring (and trial-and-error) dominates the actual edit work.
+4. The real competitor was never "N edit calls" — it's **one bash loop**: the plain config solved all 8 files with 2 tool calls.
+
+**Decision:** codemode is not integrated. The guarded `edit` plus plain tool calls (or a bash loop) is cheaper, preferred by the model, and already constraint-enforced. Revisit only if a workload appears where 1 round-trip is worth ~10× tokens — or for Jev-in-script experiments (`models.classify()` inside a codemode script), which remain untested.
+
+## Codemode: evaluated, not adopted
+
+pi >= 0.99 ships a `codemode` tool - the model writes JavaScript in a QuickJS sandbox and calls other tools from the script. We tested whether scripted edits beat direct tool calls for multi-file work (branch `codemode`, merged for its bench assets only).
+
+Setup: `v12-cm` config enables codemode (`-e builtin:codemode --tools read,bash,edit,write,codemode`); tasks `emp-multifile` (2 files) and `emp-manyfile` (8 files) with the `multi_file_edit` validator (porcelain-based, catches untracked scratch files); `codemode_calls` recorded per run.
+
+Results (8-file decider, warm cache):
+
+| task | config | result | in | out | tools | turns |
+|---|---|---|---|---|---|---|
+| emp-manyfile | v12 | PASS | 1,126 | 779 | 2 | 3 |
+| emp-manyfile-cm | v12-cm (steered) | PASS | 12,070 | 11,797 | 29 | **2** |
+
+Findings:
+
+1. **Unsteered, the model never uses codemode** - 0 script calls; it prefers direct tool calls even when codemode is available.
+2. **Steered, it works and the guards hold** - 11 `edit_guard applied` events across scripted edits (parse-safety + symbol containment enforced on every nested call).
+3. **But it costs ~10x more tokens** - script authoring (and trial-and-error) dominates the actual edit work.
+4. The real competitor was never "N edit calls" - it is **one bash loop**: the plain config solved all 8 files with 2 tool calls.
+
+**Decision:** codemode is not integrated. The guarded `edit` plus plain tool calls (or a bash loop) is cheaper, is what the model prefers, and is already constraint-enforced. Revisit only if a workload appears where 1 round-trip is worth ~10x tokens - or for Jev-in-script experiments (`models.classify()` inside a codemode script), which remain untested.
+
 ## Bench
 
 ```bash
