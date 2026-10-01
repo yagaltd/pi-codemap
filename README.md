@@ -134,10 +134,13 @@ Rust sibling lives in code-parser at `~/.config/code-parser/typellm.key`
 (`code-map typellm setup|verify`). Verify with one live call from a clone:
 `npx tsx ext/typellm.ts verify`.
 
-Bench verdict (edit suite, 2 reps × 3 tasks, post-fix re-run): **parity** —
-typellm 6/6 pass vs jev 6/6; near-identical tokens/turns (typellm slightly
-fewer output tokens on the hard task: 2,084 vs 2,468). Earlier verdicts
-from before the content-contract fix are superseded — see Bench.
+Bench verdicts (edit suite, post-fix re-runs): engines are at **parity**
+(typellm 6/6 vs jev 6/6; typellm slightly fewer output tokens on the hard
+task). **Model-tier routing** (`codemap/auto` + a 2-tier ladder, flash →
+glm-5.3): 10/10 pass across 5 tasks with **−75% output tokens** and faster
+wall on 4/5 tasks — every task in the suite routed to the cheap tier and
+passed (see Bench). Earlier verdicts from before the content-contract fix
+are superseded.
 
 ## Choosing between them
 
@@ -189,6 +192,14 @@ failed one run burning +65% output tokens; codemap 2/2 with −40/−49% output
 tokens). On trivial tasks the map snapshot costs ~1.5k input and a few
 seconds. Tool error rates post-fix: 0 hard errors across all 76 calls in
 all three configs.
+
+**Model-tier routing verdict (Phase 2, `codemap/auto` + flash→glm-5.3
+ladder, 2 reps × 5 tasks): 10/10 pass, output −75% (11,017 → 2,771
+tokens), wall faster on 4/5 tasks.** Every run routed to the cheap tier —
+the suite contains no task that needs the standard tier, so tier
+*discrimination* remains unexercised (that calibration needs real-work
+replay). Cost note: routed runs used +12% input tokens on one task (the
+cheap model reads more); at flash pricing the net cost is still down.
 
 **What the guard prevents (emp-span, pi alone vs guarded, 6 vs 4+4 runs):**
 pi alone produces *no tool-call errors* — its failure mode is the **silent

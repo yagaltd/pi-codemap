@@ -4,29 +4,132 @@
  "config": "v12-auto",
  "rows": [
   {
-   "id": "cp-edit",
-   "repo": "code-parser",
+   "id": "emp-rename-repo",
+   "repo": "empryo",
    "kind": "edit",
    "config": "v12-auto",
    "repeat": 0,
-   "success": false,
-   "why": "needle missing: ['with_capacity(4)']",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-auto-0.jsonl",
+   "success": true,
+   "why": "multi-file ok (4 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-auto-0.jsonl",
    "codemap_tools": [],
-   "jev_events": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-auto-0"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.92,
+     "model": "jev-latest",
+     "effort_ok": 0.7,
+     "cheaper_ok": 0.5,
+     "tiers": [
+      "low",
+      "standard"
+     ]
+    },
+    {
+     "event": "router_turn",
+     "decision": "logged",
+     "effort_ok": 0.73,
+     "model": "jev-latest"
+    },
+    {
+     "event": "route",
+     "thinking": "low",
+     "tier": "low",
+     "reason": "cheaper tier suffices",
+     "effort": {
+      "effortOk": true,
+      "cheaperOk": true,
+      "p": 0.75,
+      "tlTokens": 0
+     }
+    }
+   ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 0.5,
-   "tokens_in": 0,
-   "req1_in": 0,
-   "in_steady": 0,
-   "tokens_out": 0,
-   "cache_read": 0,
+   "wall_s": 16.9,
+   "tokens_in": 22162,
+   "req1_in": 21735,
+   "in_steady": 427,
+   "tokens_out": 199,
+   "cache_read": 23552,
    "cache_write": 0,
-   "turns": 0,
-   "tool_calls": 0,
+   "turns": 3,
+   "tool_calls": 2,
    "files_read": 0,
-   "model": null
+   "model": "glm-5.3-flash"
+  },
+  {
+   "id": "emp-rename-repo",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-auto",
+   "repeat": 1,
+   "success": true,
+   "why": "multi-file ok (4 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-auto-1.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-auto-1"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.91,
+     "model": "jev-latest",
+     "effort_ok": 0.73,
+     "cheaper_ok": 0.54,
+     "tiers": [
+      "low",
+      "standard"
+     ]
+    },
+    {
+     "event": "router_turn",
+     "decision": "logged",
+     "effort_ok": 0.74,
+     "model": "jev-latest"
+    },
+    {
+     "event": "route",
+     "thinking": "low",
+     "tier": "low",
+     "reason": "cheaper tier suffices",
+     "effort": {
+      "effortOk": true,
+      "cheaperOk": true,
+      "p": 0.75,
+      "tlTokens": 0
+     }
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 14.5,
+   "tokens_in": 22137,
+   "req1_in": 21735,
+   "in_steady": 402,
+   "tokens_out": 192,
+   "cache_read": 23552,
+   "cache_write": 0,
+   "turns": 3,
+   "tool_calls": 2,
+   "files_read": 0,
+   "model": "glm-5.3-flash"
   }
  ]
 }
