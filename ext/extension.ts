@@ -690,7 +690,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 								return `${h.score.toFixed(3)}${mark} ${h.path}:${h.line} ${h.kind} ${h.name} (~${h.tokens_est}tok)`;
 							})
 							.join("\n");
-			return { content, details: { hits: shown } };
+			return { content: [{ type: "text", text: content }], details: { hits: shown } };
 		},
 	});
 
@@ -710,9 +710,9 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		execute: async (_id, params) => {
 			const p = params as { symbol: string; file?: string };
 			const loc = locateFresh(st, p.symbol, p.file);
-			if (loc.error) return { content: `refused: ${loc.error}`, details: loc };
+			if (loc.error) return { content: [{ type: "text", text: `refused: ${loc.error}` }], details: loc };
 			if (loc.matches.length === 0)
-				return { content: `no symbol '${p.symbol}' in ${loc.file}`, details: loc };
+				return { content: [{ type: "text", text: `no symbol '${p.symbol}' in ${loc.file}` }], details: loc };
 			const head = loc.matches
 				.map(
 					(m, i) =>
@@ -723,7 +723,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				loc.matches.length === 1
 					? `\n\n--- source (${loc.file}) ---\n${loc.sources[0]}`
 					: `\n(ambiguous — ${loc.matches.length} matches; pass a qualified name)`;
-			return { content: head + src, details: { file: loc.file, matches: loc.matches.length } };
+			return { content: [{ type: "text", text: head + src }], details: { file: loc.file, matches: loc.matches.length } };
 		},
 	});
 
@@ -746,7 +746,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				const p = params as { symbol: string; file?: string; new_text: string };
 				const r = editSymbol(st, p.symbol, p.new_text, p.file);
 				st.mapDirty = true; // our own edit changed the repo
-				return { content: r.ok ? `ok: ${r.detail}` : `refused: ${r.detail}`, details: r };
+				return { content: [{ type: "text", text: r.ok ? `ok: ${r.detail}` : `refused: ${r.detail}` }], details: r };
 			},
 		});
 	}
@@ -783,7 +783,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				try {
 				const p = params as { path: string; edits: EditOp[] };
 				if (!Array.isArray(p.edits) || p.edits.length === 0)
-					return { content: "refused: edits[] must contain at least one {oldText, newText}" };
+					return { content: [{ type: "text", text: "refused: edits[] must contain at least one {oldText, newText}" }] };
 				const dag = activeBackend === "typellm" && process.env.CODEMAP_DAG !== "off";
 				const r = await runGuardedEdit(st, p.path, p.edits, jevLog, dag);
 				let detail = r.ok ? r.detail : `refused: ${r.detail}`;
@@ -793,10 +793,10 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					if (g) detail += ` Why: ${g.reason} Suggested split: ${g.split}`;
 				}
 				st.mapDirty = true;
-				return { content: detail };
+				return { content: [{ type: "text", text: detail }] };
 				} catch (e) {
 					jevLog({ event: "edit_guard", decision: "crashed", error: String(e).slice(0, 160) });
-					return { content: `refused: codemap edit guard crashed (${String(e).slice(0, 80)}) — use bash for this edit and report it` };
+					return { content: [{ type: "text", text: `refused: codemap edit guard crashed (${String(e).slice(0, 80)}) — use bash for this edit and report it` }] };
 				}
 			},
 		});
