@@ -35,7 +35,7 @@ The `edit` guards — every refusal leaves the file untouched:
 2. **symbol containment** — an edit inside a symbol must stay within its range ±3 lines
 3. **boundary-span refusal** — edits crossing symbol boundaries are refused (split them)
 
-## Jev add-ons (optional)
+## Jev — classifier #1
 
 With a TypeSafe credential available to pi (pi ≥ 0.99 classifier registry — `TYPESAFE_API_KEY` env, or `/login` with any Jev provider: OpenRouter, Cloudflare, Vercel, opencode):
 
@@ -65,14 +65,15 @@ Environment variables:
 | `CODEMAP_JEV_LOG` | off | append every Jev decision to `.codemap-jev.log` in the repo |
 | `CODEMAP_GATE_TOP` | `0.5` | gate fires when the top score is below this |
 | `CODEMAP_GATE_GAP` | `0.05` | …or when top−second is below this |
+| `CODEMAP_CLASSIFIER` | — | per-run classifier override: `jev` or `typellm` (see Choosing between them) |
 
-Commands: `/codemap:status` — map size, snapshot budget, watcher, Jev wiring.
+Commands: `/codemap:status` — map size, snapshot budget, watcher, classifier wiring. `/codemap:login-typellm` — store the TypeLLM key. `/codemap:classifier` — choose jev or typellm.
 
 ## Variants
 
 `index.ts` is the shipped extension (map + tools + guarded `edit` + Jev).
 `bench/configs/*.ts` hold the A/B variants the benchmark compares against
-(v1 = map+tools, v2 = +`codemap_edit_symbol`, v11 = +Jev, v12 = +edit guard).
+(v1 = map+tools, v2 = +`codemap_edit_symbol`, v11 = +Jev, v12 = +edit guard, v12-cm = +codemode for the codemode bench, v12-typellm = v12 labeled for CODEMAP_CLASSIFIER=typellm runs).
 
 ## Codemode: evaluated, not adopted
 
@@ -96,53 +97,46 @@ Findings:
 
 **Decision:** codemode is not integrated. The guarded `edit` plus plain tool calls (or a bash loop) is cheaper, preferred by the model, and already constraint-enforced. Revisit only if a workload appears where 1 round-trip is worth ~10× tokens — or for Jev-in-script experiments (`models.classify()` inside a codemode script), which remain untested.
 
-## Codemode: evaluated, not adopted
-
-pi >= 0.99 ships a `codemode` tool - the model writes JavaScript in a QuickJS sandbox and calls other tools from the script. We tested whether scripted edits beat direct tool calls for multi-file work (branch `codemode`, merged for its bench assets only).
-
-Setup: `v12-cm` config enables codemode (`-e builtin:codemode --tools read,bash,edit,write,codemode`); tasks `emp-multifile` (2 files) and `emp-manyfile` (8 files) with the `multi_file_edit` validator (porcelain-based, catches untracked scratch files); `codemode_calls` recorded per run.
-
-Results (8-file decider, warm cache):
-
-| task | config | result | in | out | tools | turns |
-|---|---|---|---|---|---|---|
-| emp-manyfile | v12 | PASS | 1,126 | 779 | 2 | 3 |
-| emp-manyfile-cm | v12-cm (steered) | PASS | 12,070 | 11,797 | 29 | **2** |
-
-Findings:
-
-1. **Unsteered, the model never uses codemode** - 0 script calls; it prefers direct tool calls even when codemode is available.
-2. **Steered, it works and the guards hold** - 11 `edit_guard applied` events across scripted edits (parse-safety + symbol containment enforced on every nested call).
-3. **But it costs ~10x more tokens** - script authoring (and trial-and-error) dominates the actual edit work.
-4. The real competitor was never "N edit calls" - it is **one bash loop**: the plain config solved all 8 files with 2 tool calls.
-
-**Decision:** codemode is not integrated. The guarded `edit` plus plain tool calls (or a bash loop) is cheaper, is what the model prefers, and is already constraint-enforced. Revisit only if a workload appears where 1 round-trip is worth ~10x tokens - or for Jev-in-script experiments (`models.classify()` inside a codemode script), which remain untested.
-
-## TypeLLM (optional second provider)
+## TypeLLM — classifier #2
 
 [TypeLLM](https://typellm.ai) is Jev-style type-safe generation on ordinary
-LLMs, plus what Jev cannot do: free-text answers, number/integer types,
-per-field thinking (with reasoning traces), image input and `depends_on`
-decision graphs. Not wired into the extension yet — this ships the credential
-plumbing so pi-codemap gets its own identity:
+LLMs (SGLang constrained decoding). Today it serves the **same bool battery**
+(router / gate / rescue) through `api.typellm.ai` — benched at parity (see
+below). It also exposes capabilities Jev structurally lacks, which the
+extension does not use yet: free-text answers, number/integer types,
+per-field thinking with reasoning traces, image input, and `depends_on`
+decision graphs. The queued next step — the **DAG gate** (span-kind →
+action → agent-facing reason → split-suggestion in one call, plus
+number-typed batch pre-flight) — is built on exactly those.
 
-- setup: run `/codemap:login-typellm` inside pi — masked input, saves to
-  `~/.config/pi-codemap/typellm.key` (chmod 600)
-- status: `/codemap:status` shows `typellm wired/off`
-- verify (from a clone): `npx tsx ext/typellm.ts verify` — one live call
-  proving string/number/boolean/enum answers
+Setup: `/codemap:login-typellm` inside pi — masked input, saves to
+`~/.config/pi-codemap/typellm.key` (chmod 600). Key chain is **file first,
+`TYPELLM_API_KEY` env last** (inverted from mailbox-parser on purpose: a
+global env key must not silently override the per-project identity). The
+Rust sibling lives in code-parser at `~/.config/code-parser/typellm.key`
+(`code-map typellm setup|verify`). Verify with one live call from a clone:
+`npx tsx ext/typellm.ts verify`.
 
-Key chain is **file first, `TYPELLM_API_KEY` env last** (inverted from
-mailbox-parser on purpose: a global env key must not silently override the
-per-project identity). The Rust sibling lives in code-parser at
-`~/.config/code-parser/typellm.key` (`code-map typellm setup|verify`).
+Bench verdict (edit suite, 2 reps × 3 tasks): **parity** — typellm 6/6
+pass, 7.2 turns, 50.5s mean vs jev 5/6 (one flake), 6.8, 53.3s; gate fired
+0/12 under either, so no threshold retune is warranted.
 
-Provider selection: `CODEMAP_CLASSIFIER=jev|typellm|auto` (default `auto` =
-Jev when pi has credentials, else TypeLLM). `/codemap:status` shows the
-active backend. Bench verdict (edit suite, 2 reps × 3 tasks, Oct 2025):
-parity — typellm 6/6 pass, 7.2 turns, 50.5s mean vs jev 5/6, 6.8, 53.3s;
-gate never fired under either, so no threshold retune is warranted.
+## Choosing between them
 
+You pick the classifier — nothing is silently chosen for you:
+
+```
+/codemap:classifier jev       # or typellm — persisted, applies immediately
+/codemap:classifier           # show active backend, choice source, availability
+/codemap:classifier clear     # back to unset
+```
+
+Resolution order: `CODEMAP_CLASSIFIER` env (per-run override) → the
+persisted choice → unset. Unset semantics: if only one provider is usable,
+it serves; if **both** are usable, Jev serves and you get a **one-time
+notice** telling you to pick. A chosen provider that is unavailable means
+the classifier idles (visible in `/codemap:status`) — it never silently
+falls back to the other one.
 
 ## Bench
 
