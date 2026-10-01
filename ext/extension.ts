@@ -27,6 +27,8 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { classifySpan, gateShortlist, gateTriggered, hasClassifier, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
+import { defaultKeyFile, loadKey, writeKeyFile } from "./typellm.ts";
+import { promptForApiKey } from "./typellm-ui.ts";
 
 
 const SNAPSHOT_BUDGET = 2500;
@@ -86,6 +88,20 @@ function has(bin: string): boolean {
 /** Load-probe: independent of st/opts — proves this extension instance loaded. */
 /** Factory-scoped wiring, reachable from module-scope init(). */
 let moduleWireClassifier: ((ctx: ExtensionContext) => void) | null = null;
+
+function typellmAvailable(): boolean {
+	try {
+		loadKey();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function typellmMasked(key: string): string {
+	const k = key.trim();
+	return k.length >= 8 ? `${k.slice(0, 4)}…${k.slice(-4)}` : "***";
+}
 
 function jevLogProbe(cwd: string, e: Record<string, unknown>): void {
 	if (process.env.CODEMAP_JEV_LOG) {
@@ -719,11 +735,34 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		});
 	}
 
+	pi.registerCommand("codemap:login-typellm", {
+		description: "Store the TypeLLM API key (typellm.ai) for pi-codemap",
+		handler: async (_args, ctx) => {
+			const key = await promptForApiKey(ctx);
+			if (!key || !key.trim()) {
+				const msg = "cancelled — no key entered";
+				if (ctx.hasUI) ctx.ui.notify(msg, "warning");
+				else console.log(msg);
+				return;
+			}
+			const msg = (() => {
+				try {
+					writeKeyFile(defaultKeyFile(), key);
+					return `key written to ${defaultKeyFile()} (${typellmMasked(key)}, chmod 600) — see /codemap:status`;
+				} catch (e) {
+					return `failed to write key: ${String(e).slice(0, 120)}`;
+				}
+			})();
+			if (ctx.hasUI) ctx.ui.notify(msg, "info");
+			else console.log(msg);
+		},
+	});
+
 	pi.registerCommand("codemap:status", {
 		description: "Show code-map state (files, snapshot, watcher)",
 		handler: async (_args, ctx) => {
 			const line = st.enabled
-				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · jev ${hasClassifier() ? "wired" : "off"}`
+				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · jev ${hasClassifier() ? "wired" : "off"} · typellm ${typellmAvailable() ? "wired" : "off"}`
 				: `disabled — ${st.reason}`;
 			if (ctx.hasUI) ctx.ui.notify(line, "info");
 			else console.log(line);
