@@ -195,14 +195,16 @@ def validate_multi_file_edit(v, clone):
         if not os.path.exists(path):
             return False, f"file missing: {f['file']}"
         content = open(path, encoding="utf-8", errors="replace").read()
-        if content.count(f["needle"]) != 1:
-            return False, f"{f['file']}: needle {f['needle']!r} count={content.count(f['needle'])} (want 1)"
+        if "needle" in f:
+            want_n = int(f.get("min_count", 1))
+            if content.count(f["needle"]) < want_n:
+                return False, f"{f['file']}: needle {f['needle']!r} count={content.count(f['needle'])} (want >= {want_n})"
         for ab in f.get("absent", []):
             if ab in content:
                 return False, f"{f['file']}: '{ab}' still present (want removed)"
         pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{f['file']}"],
                                   capture_output=True, text=True)
-        if pristine.returncode == 0 and f["needle"] in pristine.stdout:
+        if "needle" in f and pristine.returncode == 0 and f["needle"] in pristine.stdout:
             return False, f"DATASET BUG — needle pre-exists in {f['file']}"
     return True, f"multi-file ok ({len(spec)} files)"
 

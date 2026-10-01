@@ -267,6 +267,31 @@ export function classifySpan(
 	return { kind: "free" };
 }
 
+/** Per-turn effort verdict (routing Phase 1, log-only): one bool on every
+ * user turn after the first. Returns the logged fields or null on failure. */
+export async function routeTurnVerdict(
+	prompt: string,
+	log?: (e: Record<string, unknown>) => void,
+): Promise<Record<string, unknown> | null> {
+	const r = await systemOne(redactSend(prompt), {
+		low_effort_sufficient: {
+			type: "bool",
+			instructions:
+				"Could this task be completed correctly with MINIMAL reasoning effort — a mechanical change with an obvious, well-defined solution and no subtle interactions?",
+			criteria: {
+				true: "Yes — mechanical/obvious; minimal reasoning suffices.",
+				false: "No — it needs substantial reasoning (debugging, design, cross-file effects).",
+			},
+		},
+	});
+	if (!r) {
+		log?.({ event: "router_turn", decision: "unavailable" });
+		return null;
+	}
+	const out = { decision: "logged", effort_ok: r.answers.low_effort_sufficient, model: r.model };
+	return out;
+}
+
 // ── search gate ───────────────────────────────────────────────────────────
 
 export interface GateCandidate {

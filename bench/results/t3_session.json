@@ -1,0 +1,54 @@
+{
+ "tier": "t3",
+ "suite": "session",
+ "rows": [
+  {
+   "id": "cp-sess",
+   "repo": "code-parser",
+   "kind": "session",
+   "config": "v12",
+   "repeat": 0,
+   "success": true,
+   "why": "all answers present",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v12-0.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-sess-v12-0"
+    },
+    {
+     "event": "init_done",
+     "files": 53
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.96,
+     "model": "jev-latest",
+     "effort_ok": 0.49,
+     "tiers": null
+    },
+    {
+     "event": "router_turn",
+     "decision": "logged",
+     "effort_ok": 0.49,
+     "model": "jev-latest"
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 13.7,
+   "tokens_in": 4009,
+   "req1_in": 1795,
+   "in_steady": 2214,
+   "tokens_out": 778,
+   "cache_read": 23232,
+   "cache_write": 0,
+   "turns": 3,
+   "tool_calls": 4,
+   "files_read": 2,
+   "model": "glm-5.3"
+  }
+ ]
+}
