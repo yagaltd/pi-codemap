@@ -4,19 +4,19 @@
  "config": "v12-typellm",
  "rows": [
   {
-   "id": "emp-multifile",
+   "id": "emp-split",
    "repo": "empryo",
    "kind": "edit",
    "config": "v12-typellm",
    "repeat": 0,
    "success": true,
-   "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-0.jsonl",
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-0"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -25,58 +25,63 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.8354835391516132,
+     "p": 0.9947798747078498,
      "model": "typellm-latest"
     },
     {
      "event": "edit_called"
     },
     {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/core/tools/project.ts",
-     "edits": 1,
-     "symbols": []
+     "event": "batch_risk",
+     "scope": "cross_cutting",
+     "risk": 0.5,
+     "why": "ok",
+     "ops": 2,
+     "symbols": [
+      "sanitizeToolInputsStep",
+      "isAbnormalFinish"
+     ],
+     "ms": 1483
     },
     {
-     "event": "edit_called"
-    },
-    {
      "event": "edit_guard",
      "decision": "applied",
-     "file": "src/core/tools/ast-edit.ts",
-     "edits": 1,
-     "symbols": []
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
     }
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 28.2,
-   "tokens_in": 23445,
-   "req1_in": 21771,
-   "in_steady": 1674,
-   "tokens_out": 1312,
-   "cache_read": 24512,
+   "wall_s": 35.8,
+   "tokens_in": 25210,
+   "req1_in": 21744,
+   "in_steady": 3466,
+   "tokens_out": 1398,
+   "cache_read": 26048,
    "cache_write": 0,
-   "turns": 6,
-   "tool_calls": 7,
-   "files_read": 2,
+   "turns": 5,
+   "tool_calls": 4,
+   "files_read": 1,
    "model": "glm-5.3"
   },
   {
-   "id": "emp-multifile",
+   "id": "emp-split",
    "repo": "empryo",
    "kind": "edit",
    "config": "v12-typellm",
    "repeat": 1,
    "success": true,
-   "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-1.jsonl",
+   "why": "multi-file ok (1 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-1"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -85,42 +90,50 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.946596673024956,
+     "p": 0.9770226311771717,
      "model": "typellm-latest"
     },
     {
      "event": "edit_called"
     },
     {
+     "event": "batch_risk",
+     "scope": "cross_cutting",
+     "risk": 0.5,
+     "why": "ok",
+     "ops": 2,
+     "symbols": [
+      "sanitizeToolInputsStep",
+      "isAbnormalFinish"
+     ],
+     "ms": 787
+    },
+    {
      "event": "edit_guard",
      "decision": "applied",
-     "file": "src/core/tools/project.ts",
-     "edits": 1,
-     "symbols": []
+     "file": "src/core/agents/stream-options.ts",
+     "edits": 2,
+     "symbols": [
+      "sanitizeToolInputsStep L116-129",
+      "isAbnormalFinish L202-206"
+     ]
     },
     {
      "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/core/tools/ast-edit.ts",
-     "edits": 1,
-     "symbols": []
     }
    ],
    "codemode_calls": 0,
    "classifier": "typellm",
-   "wall_s": 60.8,
-   "tokens_in": 23377,
-   "req1_in": 21771,
-   "in_steady": 1606,
-   "tokens_out": 1146,
-   "cache_read": 24640,
+   "wall_s": 44.6,
+   "tokens_in": 23811,
+   "req1_in": 21744,
+   "in_steady": 2067,
+   "tokens_out": 1135,
+   "cache_read": 24512,
    "cache_write": 0,
-   "turns": 7,
+   "turns": 8,
    "tool_calls": 8,
-   "files_read": 2,
+   "files_read": 1,
    "model": "glm-5.3"
   }
  ]

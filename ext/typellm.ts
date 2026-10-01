@@ -137,6 +137,104 @@ if (isMain) {
 		});
 }
 
+// ── DAG gate (depends_on chains — TypeLLM-only capability) ────────────────
+
+import { redactSend } from "./jev.ts";
+
+/** Question chain for a boundary-span refusal: kind (enum root) →
+ * reason ∷kind, split ∷[kind, reason]. Pure — asserted in selfcheck. */
+export function spanGuidanceQuestions(): Record<string, unknown> {
+	return {
+		kind: {
+			type: "string",
+			enum: ["mechanical", "coherent_pair", "unrelated_mix", "unclear"],
+			instructions: "Classify this boundary-spanning edit: mechanical (rename/reformat across symbols), coherent_pair (two symbols changed for one logical purpose), unrelated_mix (unrelated changes bundled), unclear.",
+		},
+		reason: {
+			type: "string",
+			depends_on: ["kind"],
+			instructions: "One sentence for the editing agent: why this span must be split into per-symbol edits (each edit must parse inside one symbol).",
+		},
+		split: {
+			type: "string",
+			depends_on: ["kind", "reason"],
+			instructions: "Concrete recovery: how to split this into 2+ edit calls that each stay inside one symbol. Name the symbols and the order. Max 2 sentences.",
+		},
+	};
+}
+
+/** Question chain for multi-symbol bundles: scope (enum root) →
+ * risk ∷scope (number) → why ∷[scope, risk]. Pure — asserted in selfcheck. */
+export function batchRiskQuestions(): Record<string, unknown> {
+	return {
+		scope: {
+			type: "string",
+			enum: ["single_symbol", "coherent_multi", "cross_cutting"],
+			instructions: "single_symbol: all replacements serve one symbol's change. coherent_multi: several symbols changed for one logical purpose. cross_cutting: broad or unrelated changes bundled.",
+		},
+		risk: {
+			type: "number",
+			enum: [0.0, 0.25, 0.5, 0.75, 1.0],
+			depends_on: ["scope"],
+			instructions: "Probability this bundled edit breaks compilation or mixes unrelated concerns.",
+		},
+		why: {
+			type: "string",
+			depends_on: ["scope", "risk"],
+			instructions: "If risk >= 0.75: one sentence on the main hazard. Otherwise: exactly 'ok'.",
+		},
+	};
+}
+
+export interface SpanGuidance { kind: string; reason: string; split: string }
+
+/** One depends_on call replacing the bare span refusal. Null on ANY failure —
+ * callers fail open to the plain refusal text. */
+export async function typellmSpanGuidance(opts: {
+	file: string;
+	symbols: string[];
+	oldText: string;
+	newText: string;
+}): Promise<SpanGuidance | null> {
+	try {
+		const context = redactSend(
+			`File: ${opts.file}. The refused edit touches these symbols: ${opts.symbols.join(", ")}.\nOLD: ${opts.oldText.slice(0, 400)}\nNEW: ${opts.newText.slice(0, 400)}`,
+		);
+		const resp = await postGenerate(HOSTED_URL, loadKey(), { context, questions: spanGuidanceQuestions() });
+		const r = resp.result ?? {};
+		const kind = typeof r.kind === "string" ? r.kind : null;
+		const reason = typeof r.reason === "string" ? r.reason : null;
+		const split = typeof r.split === "string" ? r.split : null;
+		return kind && reason && split ? { kind, reason, split } : null;
+	} catch {
+		return null;
+	}
+}
+
+export interface BatchRisk { scope: string; risk: number; why: string }
+
+/** One depends_on call scoring a multi-symbol bundle: scope → risk ∷scope →
+ * why ∷[scope, risk]. Null on ANY failure — the edit then applies as usual. */
+export async function typellmBatchRisk(opts: {
+	file: string;
+	symbolsTouched: string[];
+	ops: number;
+}): Promise<BatchRisk | null> {
+	try {
+		const context = redactSend(
+			`File: ${opts.file}. One edit call bundles ${opts.ops} replacement(s) touching these symbols: ${opts.symbolsTouched.join(", ") || "(none — free lines)"}.`,
+		);
+		const resp = await postGenerate(HOSTED_URL, loadKey(), { context, questions: batchRiskQuestions() });
+		const r = resp.result ?? {};
+		const scope = typeof r.scope === "string" ? r.scope : null;
+		const risk = typeof r.risk === "number" ? r.risk : null;
+		const why = typeof r.why === "string" ? r.why : null;
+		return scope && risk !== null && why !== null ? { scope, risk, why } : null;
+	} catch {
+		return null;
+	}
+}
+
 // ── classifier backend (parity with the Jev bool battery) ─────────────────
 
 export interface BoolQuestion {

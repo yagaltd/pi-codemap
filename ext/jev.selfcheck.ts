@@ -5,7 +5,7 @@
  */
 import assert from "node:assert/strict";
 import { classifySpan, gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
-import { typellmAnswers, typellmQuestions } from "./typellm.ts";
+import { batchRiskQuestions, spanGuidanceQuestions, typellmAnswers, typellmQuestions } from "./typellm.ts";
 
 // TRIVIAL_RE: high-precision only — these skip for free
 assert.equal(isTrivialPrompt("run the tests"), true);
@@ -56,5 +56,15 @@ assert.equal(ta.p.probability, 0.87, "probabilities shape");
 assert.equal(ta.q.probability, 0, "plain false");
 assert.equal(ta.r.probability, 0, "value-only false");
 assert.ok(!("junk" in ta), "non-boolean skipped");
+
+// DAG gate question chains (depends_on structure)
+const sg = spanGuidanceQuestions();
+assert.deepEqual(sg.reason.depends_on, ["kind"]);
+assert.deepEqual(sg.split.depends_on, ["kind", "reason"]);
+assert.ok(Array.isArray(sg.kind.enum));
+const br = batchRiskQuestions();
+assert.deepEqual(br.risk.depends_on, ["scope"]);
+assert.deepEqual(br.why.depends_on, ["scope", "risk"]);
+assert.deepEqual(br.risk.enum, [0.0, 0.25, 0.5, 0.75, 1.0], "number-typed ladder");
 
 console.log("jev.selfcheck: all assertions passed");

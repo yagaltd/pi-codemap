@@ -27,7 +27,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { classifySpan, gateShortlist, gateTriggered, hasClassifier, resetClassifyFn, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
-import { defaultKeyFile, loadKey, typellmAvailable, typellmClassifyFn, writeKeyFile } from "./typellm.ts";
+import { defaultKeyFile, loadKey, typellmAvailable, typellmBatchRisk, typellmClassifyFn, typellmSpanGuidance, writeKeyFile } from "./typellm.ts";
 import { promptForApiKey } from "./typellm-ui.ts";
 
 
@@ -340,12 +340,13 @@ function parseErrorsOf(absPath: string, suffix: string, content: string): number
  *     replacement must stay within that symbol's original range (+-3 lines
  *     for doc-comment attachment).
  */
-export function runGuardedEdit(
+export async function runGuardedEdit(
 	st: State,
 	path_: string,
 	edits: EditOp[],
 	jevLog: (e: Record<string, unknown>) => void,
-): { ok: boolean; detail: string } {
+	dag = false,
+): Promise<{ ok: boolean; detail: string; spanned?: string[]; spanOld?: string; spanNew?: string }> {
 	const abs = path.isAbsolute(path_) ? path_ : path.join(st.cwd, path_);
 	if (!fs.existsSync(abs)) return { ok: false, detail: `file not found: ${path_}` };
 	const original = fs.readFileSync(abs, "utf8");
@@ -397,9 +398,21 @@ export function runGuardedEdit(
 			plan.push({ start: s.start, end: s.end, newText: s.newText, symName: innermost.name, symStart: innermost.start_line, symEnd: innermost.end_line, newStartLine, newEndLine });
 		} else if (cls.kind === "spanning") {
 			jevLog({ event: "edit_guard", decision: "refused_span", file: path_, symbols: cls.syms, span: [oldStartLine + 1, oldEndLine + 1] });
-			return { ok: false, detail: `edit spans symbol boundaries (${cls.syms.join(", ")}). Split it into one edit per symbol, or use write for a whole-file restructure.` };
+			return { ok: false, detail: `edit spans symbol boundaries (${cls.syms.join(", ")}). Split it into one edit per symbol, or use write for a whole-file restructure.`, spanned: cls.syms, spanOld: s.op.oldText, spanNew: s.op.newText };
 		} else {
 			plan.push({ start: s.start, end: s.end, newText: s.newText, newStartLine, newEndLine });
+		}
+	}
+
+	// TypeLLM-only batch pre-flight: multi-symbol bundles get one depends_on
+	// risk call (scope → risk ∷scope → why). Fails open to apply-as-usual.
+	const touched = [...new Set(plan.map((pp) => pp.symName).filter((v): v is string => !!v))];
+	if (dag && touched.length >= 2) {
+		const t0 = Date.now();
+		const risk = await typellmBatchRisk({ file: path_, symbolsTouched: touched, ops: plan.length });
+		jevLog({ event: "batch_risk", ...(risk ?? { failed: true }), ops: plan.length, symbols: touched, ms: Date.now() - t0 });
+		if (risk && risk.risk >= (Number(process.env.CODEMAP_DAG_REFUSE) || 0.75)) {
+			return { ok: false, detail: `bundled edit refused by pre-flight risk ${risk.risk} (scope: ${risk.scope}): ${risk.why} Split into separate edit calls, one symbol each.` };
 		}
 	}
 
@@ -771,9 +784,16 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				const p = params as { path: string; edits: EditOp[] };
 				if (!Array.isArray(p.edits) || p.edits.length === 0)
 					return { content: "refused: edits[] must contain at least one {oldText, newText}" };
-				const r = runGuardedEdit(st, p.path, p.edits, jevLog);
+				const dag = activeBackend === "typellm" && process.env.CODEMAP_DAG !== "off";
+				const r = await runGuardedEdit(st, p.path, p.edits, jevLog, dag);
+				let detail = r.ok ? r.detail : `refused: ${r.detail}`;
+				if (!r.ok && dag && r.spanned) {
+					const g = await typellmSpanGuidance({ file: p.path, symbols: r.spanned, oldText: r.spanOld ?? "", newText: r.spanNew ?? "" });
+					jevLog({ event: "dag_guidance", ok: !!g, kind: g?.kind ?? null });
+					if (g) detail += ` Why: ${g.reason} Suggested split: ${g.split}`;
+				}
 				st.mapDirty = true;
-				return { content: r.ok ? r.detail : `refused: ${r.detail}` };
+				return { content: detail };
 				} catch (e) {
 					jevLog({ event: "edit_guard", decision: "crashed", error: String(e).slice(0, 160) });
 					return { content: `refused: codemap edit guard crashed (${String(e).slice(0, 80)}) — use bash for this edit and report it` };

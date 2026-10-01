@@ -196,6 +196,9 @@ def validate_multi_file_edit(v, clone):
         content = open(path, encoding="utf-8", errors="replace").read()
         if content.count(f["needle"]) != 1:
             return False, f"{f['file']}: needle {f['needle']!r} count={content.count(f['needle'])} (want 1)"
+        for ab in f.get("absent", []):
+            if ab in content:
+                return False, f"{f['file']}: '{ab}' still present (want removed)"
         pristine = subprocess.run(["git", "-C", clone, "show", f"HEAD:{f['file']}"],
                                   capture_output=True, text=True)
         if pristine.returncode == 0 and f["needle"] in pristine.stdout:

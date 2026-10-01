@@ -66,6 +66,8 @@ Environment variables:
 | `CODEMAP_GATE_TOP` | `0.5` | gate fires when the top score is below this |
 | `CODEMAP_GATE_GAP` | `0.05` | …or when top−second is below this |
 | `CODEMAP_CLASSIFIER` | — | per-run classifier override: `jev` or `typellm` (see Choosing between them) |
+| `CODEMAP_DAG` | `on` | TypeLLM-only DAG gate (span guidance + batch pre-flight); `off` disables |
+| `CODEMAP_DAG_REFUSE` | `0.75` | batch pre-flight refuses bundles scoring at or above this |
 
 Commands: `/codemap:status` — map size, snapshot budget, watcher, classifier wiring. `/codemap:login-typellm` — store the TypeLLM key. `/codemap:classifier` — choose jev or typellm.
 
@@ -100,14 +102,24 @@ Findings:
 ## TypeLLM — classifier #2
 
 [TypeLLM](https://typellm.ai) is Jev-style type-safe generation on ordinary
-LLMs (SGLang constrained decoding). Today it serves the **same bool battery**
+LLMs (SGLang constrained decoding). It serves the **same bool battery**
 (router / gate / rescue) through `api.typellm.ai` — benched at parity (see
-below). It also exposes capabilities Jev structurally lacks, which the
-extension does not use yet: free-text answers, number/integer types,
-per-field thinking with reasoning traces, image input, and `depends_on`
-decision graphs. The queued next step — the **DAG gate** (span-kind →
-action → agent-facing reason → split-suggestion in one call, plus
-number-typed batch pre-flight) — is built on exactly those.
+below) — **plus** what Jev structurally cannot do, and which this extension
+wires as the **DAG gate**:
+
+- **Span-refusal guidance** — when the guard refuses a boundary-spanning
+  edit, one `depends_on` call (`kind` → `reason` ∷kind → `split`
+  ∷[kind, reason]) appends an agent-facing why and a concrete per-symbol
+  split suggestion to the refusal, so the agent recovers on its next turn.
+  Benched live: `dag_guidance(ok, kind=coherent_pair)` on emp-span.
+- **Batch pre-flight** — a bundled edit touching 2+ symbols gets one
+  number-typed call (`scope` → `risk` ∷scope → `why`); risk ≥
+  `CODEMAP_DAG_REFUSE` (default 0.75) refuses before anything is written,
+  else the score is logged and the edit applies. Benched live: 0.5 →
+  allowed. `CODEMAP_DAG=off` disables both.
+
+Free text, numbers, per-field thinking with traces, image input, and
+`depends_on` decision graphs are the primitives; Jev offers none of them.
 
 Setup: `/codemap:login-typellm` inside pi — masked input, saves to
 `~/.config/pi-codemap/typellm.key` (chmod 600). Key chain is **file first,
@@ -137,6 +149,11 @@ it serves; if **both** are usable, Jev serves and you get a **one-time
 notice** telling you to pick. A chosen provider that is unavailable means
 the classifier idles (visible in `/codemap:status`) — it never silently
 falls back to the other one.
+
+The choice is also a feature switch: the **DAG gate is TypeLLM-only** —
+choosing `typellm` turns on span-refusal guidance and batch pre-flight;
+choosing `jev` keeps the plain refusal text. Parity on the shared battery
+means the choice costs nothing measurable on router/gate/rescue.
 
 ## Bench
 
