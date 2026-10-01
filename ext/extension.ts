@@ -596,6 +596,24 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			const d = await routeFirstPrompt(event.prompt, jevLog);
 			st.jevRouterSkipped = d === "skip";
 		}
+
+		// Routing Phase 1 (log-only): per-turn effort verdict on every turn
+		// after the first (the first is already judged by the router battery).
+		// Nothing acts on this — it builds the per-turn calibration dataset.
+		if (opts.jev && st.jevRouterDecided && process.env.CODEMAP_TURN_VERDICTS !== "off") {
+			const turnPrompt = String((event as { prompt?: unknown }).prompt ?? "");
+			if (turnPrompt.trim()) {
+				void (async () => {
+					try {
+						const { routeTurnVerdict } = await import("./jev.ts");
+						const v = await routeTurnVerdict(turnPrompt, jevLog);
+						if (v) jevLog({ event: "router_turn", ...v });
+					} catch (e) {
+						jevLog({ event: "router_turn", error: String(e).slice(0, 120) });
+					}
+				})();
+			}
+		}
 		if (opts.jev && st.jevRouterSkipped) return;
 		ensureFresh(st, Date.now());
 		// Structured section mutation — NOT a systemPrompt override. Overriding

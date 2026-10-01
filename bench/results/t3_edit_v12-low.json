@@ -1,125 +1,22 @@
 {
  "tier": "t3",
  "suite": "edit",
- "config": "v12",
+ "config": "v12-low",
  "rows": [
   {
    "id": "emp-signature",
    "repo": "empryo",
    "kind": "edit",
-   "config": "v12",
+   "config": "v12-low",
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-0.jsonl",
-   "codemap_tools": [
-    "codemap_search"
-   ],
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-0.jsonl",
+   "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-0"
-    },
-    {
-     "event": "init_done",
-     "files": 576
-    },
-    {
-     "event": "router",
-     "decision": "code",
-     "p": 0.92,
-     "model": "jev-latest",
-     "effort_ok": 0.54,
-     "tiers": null
-    },
-    {
-     "event": "router_turn",
-     "decision": "logged",
-     "effort_ok": 0.51,
-     "model": "jev-latest"
-    },
-    {
-     "event": "gate",
-     "decision": "fired",
-     "p": [
-      0.65,
-      0.69,
-      0.65,
-      0.49,
-      0.42
-     ],
-     "model": "jev-latest"
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/config/index.ts",
-     "edits": 3,
-     "symbols": [
-      "loadConfig L90-127",
-      "loadConfig L90-127",
-      "applyConfigPatch L326-339"
-     ]
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/core/presets/merge.ts",
-     "edits": 1,
-     "symbols": [
-      "mergePresetsIntoConfig L47-54"
-     ]
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/components/App.tsx",
-     "edits": 2,
-     "symbols": [
-      "saveToScope L649-672",
-      "saveToScope L649-672"
-     ]
-    }
-   ],
-   "codemode_calls": 0,
-   "classifier": "auto",
-   "wall_s": 47.7,
-   "tokens_in": 3487,
-   "req1_in": 33,
-   "in_steady": 3454,
-   "tokens_out": 1855,
-   "cache_read": 26112,
-   "cache_write": 0,
-   "turns": 10,
-   "tool_calls": 15,
-   "files_read": 3,
-   "model": "glm-5.3"
-  },
-  {
-   "id": "emp-signature",
-   "repo": "empryo",
-   "kind": "edit",
-   "config": "v12",
-   "repeat": 1,
-   "success": true,
-   "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-1.jsonl",
-   "codemap_tools": [
-    "codemap_search"
-   ],
-   "jev_events": [
-    {
-     "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-1"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-0"
     },
     {
      "event": "init_done",
@@ -136,19 +33,7 @@
     {
      "event": "router_turn",
      "decision": "logged",
-     "effort_ok": 0.54,
-     "model": "jev-latest"
-    },
-    {
-     "event": "gate",
-     "decision": "fired",
-     "p": [
-      0.64,
-      0.71,
-      0.65,
-      0.5,
-      0.46
-     ],
+     "effort_ok": 0.57,
      "model": "jev-latest"
     },
     {
@@ -158,11 +43,34 @@
      "event": "edit_guard",
      "decision": "applied",
      "file": "src/config/index.ts",
-     "edits": 3,
+     "edits": 1,
+     "symbols": [
+      "applyConfigPatch L326-339"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/config/index.ts",
+     "edits": 2,
      "symbols": [
       "loadConfig L90-127",
-      "loadConfig L90-127",
-      "applyConfigPatch L326-339"
+      "loadConfig L90-127"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/presets/merge.ts",
+     "edits": 1,
+     "symbols": [
+      "mergePresetsIntoConfig L47-54"
      ]
     },
     {
@@ -189,6 +97,92 @@
       "saveToScope L649-672",
       "saveToScope L649-672"
      ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 38.2,
+   "tokens_in": 2282,
+   "req1_in": 35,
+   "in_steady": 2247,
+   "tokens_out": 953,
+   "cache_read": 25152,
+   "cache_write": 0,
+   "turns": 9,
+   "tool_calls": 11,
+   "files_read": 2,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-signature",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-low",
+   "repeat": 1,
+   "success": true,
+   "why": "multi-file ok (3 files)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-1.jsonl",
+   "codemap_tools": [],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-1"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.92,
+     "model": "jev-latest",
+     "effort_ok": 0.55,
+     "tiers": null
+    },
+    {
+     "event": "router_turn",
+     "decision": "logged",
+     "effort_ok": 0.52,
+     "model": "jev-latest"
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/config/index.ts",
+     "edits": 1,
+     "symbols": [
+      "applyConfigPatch L326-339"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/components/App.tsx",
+     "edits": 2,
+     "symbols": [
+      "saveToScope L649-672",
+      "saveToScope L649-672"
+     ]
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/config/index.ts",
+     "edits": 2,
+     "symbols": [
+      "loadConfig L90-127",
+      "loadConfig L90-127"
+     ]
     },
     {
      "event": "edit_called"
@@ -201,32 +195,20 @@
      "symbols": [
       "mergePresetsIntoConfig L47-54"
      ]
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/config/index.ts",
-     "edits": 1,
-     "symbols": [
-      "applyConfigPatch L326-340"
-     ]
     }
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 102.0,
-   "tokens_in": 7582,
-   "req1_in": 33,
-   "in_steady": 7549,
-   "tokens_out": 2949,
-   "cache_read": 29312,
+   "wall_s": 24.0,
+   "tokens_in": 1868,
+   "req1_in": 35,
+   "in_steady": 1833,
+   "tokens_out": 721,
+   "cache_read": 24576,
    "cache_write": 0,
-   "turns": 19,
-   "tool_calls": 24,
-   "files_read": 3,
+   "turns": 7,
+   "tool_calls": 8,
+   "files_read": 1,
    "model": "glm-5.3"
   }
  ]
