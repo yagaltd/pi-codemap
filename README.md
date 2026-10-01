@@ -134,9 +134,10 @@ Rust sibling lives in code-parser at `~/.config/code-parser/typellm.key`
 (`code-map typellm setup|verify`). Verify with one live call from a clone:
 `npx tsx ext/typellm.ts verify`.
 
-Bench verdict (edit suite, 2 reps × 3 tasks): **parity** — typellm 6/6
-pass, 7.2 turns, 50.5s mean vs jev 5/6 (one flake), 6.8, 53.3s; gate fired
-0/12 under either, so no threshold retune is warranted.
+Bench verdict (edit suite, 2 reps × 3 tasks, post-fix re-run): **parity** —
+typellm 6/6 pass vs jev 6/6; near-identical tokens/turns (typellm slightly
+fewer output tokens on the hard task: 2,084 vs 2,468). Earlier verdicts
+from before the content-contract fix are superseded — see Bench.
 
 ## Choosing between them
 
@@ -159,6 +160,35 @@ The choice is also a feature switch: the **DAG gate is TypeLLM-only** —
 choosing `typellm` turns on span-refusal guidance and batch pre-flight;
 choosing `jev` keeps the plain refusal text. Parity on the shared battery
 means the choice costs nothing measurable on router/gate/rescue.
+
+## Bench
+
+**Note on data from before Oct 2025 (fix `cbbe6c4`):** extension tools used to
+return string content, which crashed pi's result dispatch *after* execution —
+the model never saw tool output (100% isError on codemap_search/locate, ~31%
+on edit). Tasks still passed via the system-prompt map + read/bash + blind
+retry, so pass/fail columns remained meaningful but tool-level numbers did
+not. All current numbers come from post-fix runs.
+
+Post-fix trio (pi alone vs codemap+jev vs codemap+typellm, 2 reps × 3 tasks):
+
+| task | config | pass | in | out | tools | turns | wall |
+|---|---|---|---|---|---|---|---|
+| cp-edit (trivial) | baseline | 2/2 | 1,001 | 313 | 3.5 | 4.5 | 12s |
+| cp-edit | v12 (jev) | 2/2 | 2,570 | 308 | 2.5 | 3.5 | 19s |
+| cp-edit | v12-typellm | 2/2 | 2,557 | 286 | 2.5 | 3.5 | 24s |
+| emp-span (hard) | baseline | **1/2** | 28,463 | 4,074 | 4.5 | 4.5 | 71s |
+| emp-span | v12 | 2/2 | 25,324 | 2,468 | 7.0 | 7.0 | 65s |
+| emp-span | v12-typellm | 2/2 | 24,973 | 2,084 | 7.0 | 7.0 | 56s |
+| emp-split (recovery) | baseline | 2/2 | 20,734 | 570 | 4.0 | 4.5 | 18s |
+| emp-split | v12 | 2/2 | 24,537 | 670 | 3.0 | 4.0 | 26s |
+| emp-split | v12-typellm | 2/2 | 25,350 | 1,324 | 4.0 | 5.0 | 40s |
+
+Reading: on hard big-file tasks codemap prevents the thrash loop (baseline
+failed one run burning +65% output tokens; codemap 2/2 with −40/−49% output
+tokens). On trivial tasks the map snapshot costs ~1.5k input and a few
+seconds. Tool error rates post-fix: 0 hard errors across all 76 calls in
+all three configs.
 
 ## Bench
 
