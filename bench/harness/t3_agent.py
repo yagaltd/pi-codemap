@@ -35,6 +35,7 @@ CONFIGS = {
     "v12-cm": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts"),
                "-e", "builtin:codemode",
                "--tools", "read,bash,edit,write,codemode"],
+    "v12-typellm": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts")],
 }
 
 
@@ -407,6 +408,7 @@ def main():
                     "codemap_tools": codemap_tools,
                     "jev_events": jev_events,
                     "codemode_calls": codemode_calls,
+                    "classifier": os.environ.get("CODEMAP_CLASSIFIER", "auto"),
                     "wall_s": wall, **metrics,
                 }
                 rows.append(row)

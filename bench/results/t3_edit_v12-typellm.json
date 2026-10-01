@@ -1,22 +1,22 @@
 {
  "tier": "t3",
  "suite": "edit",
- "config": "v12",
+ "config": "v12-typellm",
  "rows": [
   {
    "id": "emp-multifile",
    "repo": "empryo",
    "kind": "edit",
-   "config": "v12",
+   "config": "v12-typellm",
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-0.jsonl",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-0"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -25,8 +25,8 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.59,
-     "model": "jev-latest"
+     "p": 0.8354835391516132,
+     "model": "typellm-latest"
     },
     {
      "event": "edit_called"
@@ -50,16 +50,16 @@
     }
    ],
    "codemode_calls": 0,
-   "classifier": "auto",
-   "wall_s": 23.1,
-   "tokens_in": 22926,
-   "req1_in": 21763,
-   "in_steady": 1163,
-   "tokens_out": 669,
-   "cache_read": 23936,
+   "classifier": "typellm",
+   "wall_s": 28.2,
+   "tokens_in": 23445,
+   "req1_in": 21771,
+   "in_steady": 1674,
+   "tokens_out": 1312,
+   "cache_read": 24512,
    "cache_write": 0,
-   "turns": 5,
-   "tool_calls": 6,
+   "turns": 6,
+   "tool_calls": 7,
    "files_read": 2,
    "model": "glm-5.3"
   },
@@ -67,16 +67,16 @@
    "id": "emp-multifile",
    "repo": "empryo",
    "kind": "edit",
-   "config": "v12",
+   "config": "v12-typellm",
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-1.jsonl",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-1"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -85,8 +85,8 @@
     {
      "event": "router",
      "decision": "code",
-     "p": 0.59,
-     "model": "jev-latest"
+     "p": 0.946596673024956,
+     "model": "typellm-latest"
     },
     {
      "event": "edit_called"
@@ -107,26 +107,16 @@
      "file": "src/core/tools/ast-edit.ts",
      "edits": 1,
      "symbols": []
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/core/tools/project.ts",
-     "edits": 1,
-     "symbols": []
     }
    ],
    "codemode_calls": 0,
-   "classifier": "auto",
-   "wall_s": 37.0,
-   "tokens_in": 23850,
-   "req1_in": 21763,
-   "in_steady": 2087,
-   "tokens_out": 1467,
-   "cache_read": 24960,
+   "classifier": "typellm",
+   "wall_s": 60.8,
+   "tokens_in": 23377,
+   "req1_in": 21771,
+   "in_steady": 1606,
+   "tokens_out": 1146,
+   "cache_read": 24640,
    "cache_write": 0,
    "turns": 7,
    "tool_calls": 8,

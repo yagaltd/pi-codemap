@@ -137,6 +137,12 @@ mailbox-parser on purpose: a global env key must not silently override the
 per-project identity). The Rust sibling lives in code-parser at
 `~/.config/code-parser/typellm.key` (`code-map typellm setup|verify`).
 
+Provider selection: `CODEMAP_CLASSIFIER=jev|typellm|auto` (default `auto` =
+Jev when pi has credentials, else TypeLLM). `/codemap:status` shows the
+active backend. Bench verdict (edit suite, 2 reps × 3 tasks, Oct 2025):
+parity — typellm 6/6 pass, 7.2 turns, 50.5s mean vs jev 5/6, 6.8, 53.3s;
+gate never fired under either, so no threshold retune is warranted.
+
 
 ## Bench
 
