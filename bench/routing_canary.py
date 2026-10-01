@@ -18,6 +18,8 @@ PROBES = [
     ("hard", "Migrate this monorepo from webpack to vite without breaking CI."),
     ("hard", "Redesign the storage layer to shard by tenant without downtime."),
     ("hard", "This recursive parser blows the stack on deeply nested input — rework it iteratively with tests."),
+    ("hard", "Build a rotating 3D torus-knot scene with OGL (oframe/ogl) in a single HTML file — no three.js."),
+    ("hard", "This WebGL shader compiles but renders black on some GPUs — diagnose the precision/derivative issue."),
 ]
 EFFORT_Q = {
     "type": "noul",

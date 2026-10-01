@@ -113,7 +113,7 @@ export async function systemOne(
 
 // ── routing (log-only Phase 1): effort/model-tier verdicts ───────────────
 
-export interface RoutingTiers { [label: string]: { model: string; profile: string } }
+export interface RoutingTiers { [label: string]: { model: string; profile: string; capabilities?: string[] } }
 
 /** Human-curated tier ladder (~/.config/pi-codemap/models.json). Absent file
  * = routing data collection runs without the tier question. Never acted on

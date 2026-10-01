@@ -560,7 +560,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		const cheaperQuestion = tiers
 			? {
 					type: "bool" as const,
-					instructions: `Would a cheaper, less capable model complete this task correctly? Cheaper tiers available: ${Object.keys(tiers).join(", ")}.`,
+					instructions: `Would the CHEAPEST tier complete this task correctly? Tier profiles — ${Object.entries(tiers).map(([k, t]) => `${k}: ${t.profile}`).join("; ")}. Weigh ecosystem familiarity: niche libraries or deep domain knowledge favor the fuller tiers.`,
 					criteria: { true: "Yes — the cheap tier suffices for a correct result.", false: "No — this needs the full-capability model." },
 				}
 			: null;
@@ -999,6 +999,15 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			name: "Auto (codemap routed)",
 			thinkingLevels: ["low", "high"],
 			async route(request, ctx) {
+				// Deterministic modality gate: an image in the request requires a
+				// vision-capable tier — a fact, not a judgment. Non-vision tiers
+				// are excluded; if none remains, stay on the current model rather
+				// than route to a blind one.
+				const lastMsg = request.messages.filter((mm: { role: string }) => mm.role === "user").at(-1);
+				const msgJson = JSON.stringify((lastMsg as { content?: unknown })?.content ?? "");
+				const needsVision = msgJson.includes('"image"') || msgJson.includes('"image_url"');
+				const visionLabels = labels.filter((l) => (tiers[l].capabilities ?? []).includes("vision"));
+				const effectiveLabels = needsVision && visionLabels.length ? visionLabels : labels;
 				const wire = (thinking: "low" | "high", tier: string, state?: AutoState) => {
 					const m = parseModel(tiers[tier]?.model ?? "");
 					const model = m ? ctx.modelRegistry.find(m.provider, m.id) : undefined;
@@ -1024,12 +1033,12 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				const decision = routeDecision({
 					effortOk: effort?.effortOk ?? null,
 					cheaperOk: effort?.cheaperOk ?? null,
-					tiers: labels,
+					tiers: effectiveLabels,
 					current: labels[labels.length - 1],
 					userOverride: false,
 				});
 				routedLowThisTurn = decision.thinking === "low";
-				const wired = wire(decision.thinking ?? "high", decision.tier ?? labels[labels.length - 1]);
+				const wired = wire(decision.thinking ?? "high", decision.tier ?? (needsVision && visionLabels.length ? visionLabels[0] : labels[labels.length - 1]));
 				if (!wired) return { model: request.previous?.model ?? ctx.model, thinkingLevel: "high" };
 				jevLog({ event: "route", thinking: decision.thinking, tier: decision.tier, reason: decision.reason, effort: effort, tl_tokens: effort?.tlTokens || undefined });
 				return wired;
