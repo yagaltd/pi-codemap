@@ -11,7 +11,7 @@
    "repeat": 0,
    "success": false,
    "why": "no .codemap-jev.log (jev add-on absent or never decided)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-gate-baseline-0.jsonl",
+   "raw": "bench/.work/raw/emp-gate-baseline-0.jsonl",
    "codemap_tools": [],
    "wall_s": null,
    "tokens_in": 25302,

@@ -11,12 +11,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-0"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-0"
     },
     {
      "event": "init_done",
@@ -63,14 +63,14 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-1.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-1"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-1"
     },
     {
      "event": "init_done",

@@ -11,12 +11,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-0"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -76,12 +76,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-1"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-1"
     },
     {
      "event": "init_done",

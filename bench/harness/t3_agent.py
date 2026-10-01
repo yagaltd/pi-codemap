@@ -411,7 +411,7 @@ def main():
                     shutil.copy(jev_path, raw_path + ".jevlog")
                 row = {
                     "id": t["id"], "repo": repo, "kind": t["kind"], "config": cfg_name,
-                    "repeat": rep, "success": ok, "why": why, "raw": raw_path,
+                    "repeat": rep, "success": ok, "why": why, "raw": os.path.relpath(raw_path, C.ROOT),
                     "codemap_tools": codemap_tools,
                     "jev_events": jev_events,
                     "codemode_calls": codemode_calls,

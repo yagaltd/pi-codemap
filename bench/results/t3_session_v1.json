@@ -11,7 +11,7 @@
    "repeat": 0,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v1-0.jsonl",
+   "raw": "bench/.work/raw/cp-sess-v1-0.jsonl",
    "codemap_tools": [],
    "wall_s": 49.4,
    "tokens_in": 6231,
@@ -33,7 +33,7 @@
    "repeat": 1,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v1-1.jsonl",
+   "raw": "bench/.work/raw/cp-sess-v1-1.jsonl",
    "codemap_tools": [],
    "wall_s": 24.3,
    "tokens_in": 4311,
@@ -55,7 +55,7 @@
    "repeat": 2,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v1-2.jsonl",
+   "raw": "bench/.work/raw/cp-sess-v1-2.jsonl",
    "codemap_tools": [],
    "wall_s": 27.3,
    "tokens_in": 4380,
@@ -77,7 +77,7 @@
    "repeat": 0,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-sess-v1-0.jsonl",
+   "raw": "bench/.work/raw/emp-sess-v1-0.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
@@ -101,7 +101,7 @@
    "repeat": 1,
    "success": false,
    "why": "missing: ['ast-edit.ts']",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-sess-v1-1.jsonl",
+   "raw": "bench/.work/raw/emp-sess-v1-1.jsonl",
    "codemap_tools": [],
    "wall_s": 31.9,
    "tokens_in": 24882,
@@ -123,7 +123,7 @@
    "repeat": 2,
    "success": false,
    "why": "missing: ['ast-edit.ts']",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-sess-v1-2.jsonl",
+   "raw": "bench/.work/raw/emp-sess-v1-2.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
@@ -147,7 +147,7 @@
    "repeat": 0,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cog-sess-v1-0.jsonl",
+   "raw": "bench/.work/raw/cog-sess-v1-0.jsonl",
    "codemap_tools": [],
    "wall_s": 44.1,
    "tokens_in": 25952,
@@ -169,7 +169,7 @@
    "repeat": 1,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cog-sess-v1-1.jsonl",
+   "raw": "bench/.work/raw/cog-sess-v1-1.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
@@ -193,7 +193,7 @@
    "repeat": 2,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cog-sess-v1-2.jsonl",
+   "raw": "bench/.work/raw/cog-sess-v1-2.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],

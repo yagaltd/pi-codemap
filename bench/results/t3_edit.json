@@ -10,12 +10,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-auto-0.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-auto-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-auto-0"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-auto-0"
     },
     {
      "event": "init_done",
@@ -74,12 +74,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-auto-1.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-auto-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-auto-1"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-auto-1"
     },
     {
      "event": "init_done",
@@ -138,12 +138,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-0"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-0"
     },
     {
      "event": "init_done",
@@ -190,14 +190,14 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-1.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-1"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-1"
     },
     {
      "event": "init_done",
@@ -259,12 +259,12 @@
    "repeat": 0,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-auto-0.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-auto-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-auto-0"
+     "cwd": "bench/.work/t3/emp-span-v12-auto-0"
     },
     {
      "event": "init_done",
@@ -341,14 +341,14 @@
    "repeat": 1,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-auto-1.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-auto-1.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-auto-1"
+     "cwd": "bench/.work/t3/emp-span-v12-auto-1"
     },
     {
      "event": "init_done",
@@ -407,14 +407,14 @@
    "repeat": 0,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-0"
+     "cwd": "bench/.work/t3/emp-span-v12-0"
     },
     {
      "event": "init_done",
@@ -479,12 +479,12 @@
    "repeat": 1,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-1"
+     "cwd": "bench/.work/t3/emp-span-v12-1"
     },
     {
      "event": "init_done",
@@ -549,12 +549,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-auto-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-auto-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-auto-0"
+     "cwd": "bench/.work/t3/emp-multifile-v12-auto-0"
     },
     {
      "event": "init_done",
@@ -613,12 +613,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-auto-1.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-auto-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-auto-1"
+     "cwd": "bench/.work/t3/emp-multifile-v12-auto-1"
     },
     {
      "event": "init_done",
@@ -697,12 +697,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-0"
+     "cwd": "bench/.work/t3/emp-multifile-v12-0"
     },
     {
      "event": "init_done",
@@ -769,12 +769,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-1"
+     "cwd": "bench/.work/t3/emp-multifile-v12-1"
     },
     {
      "event": "init_done",
@@ -841,12 +841,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-auto-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-auto-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-auto-0"
+     "cwd": "bench/.work/t3/emp-split-v12-auto-0"
     },
     {
      "event": "init_done",
@@ -918,12 +918,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-auto-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-auto-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-auto-1"
+     "cwd": "bench/.work/t3/emp-split-v12-auto-1"
     },
     {
      "event": "init_done",
@@ -982,12 +982,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-0"
+     "cwd": "bench/.work/t3/emp-split-v12-0"
     },
     {
      "event": "init_done",
@@ -1047,12 +1047,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-1"
+     "cwd": "bench/.work/t3/emp-split-v12-1"
     },
     {
      "event": "init_done",
@@ -1112,14 +1112,14 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-auto-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-auto-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-auto-0"
+     "cwd": "bench/.work/t3/cp-edit-v12-auto-0"
     },
     {
      "event": "init_done",
@@ -1190,14 +1190,14 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-auto-1.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-auto-1.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-auto-1"
+     "cwd": "bench/.work/t3/cp-edit-v12-auto-1"
     },
     {
      "event": "init_done",
@@ -1268,12 +1268,12 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-0"
+     "cwd": "bench/.work/t3/cp-edit-v12-0"
     },
     {
      "event": "init_done",
@@ -1332,12 +1332,12 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-1.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-1"
+     "cwd": "bench/.work/t3/cp-edit-v12-1"
     },
     {
      "event": "init_done",
@@ -1396,12 +1396,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-0"
+     "cwd": "bench/.work/t3/emp-signature-v12-low-0"
     },
     {
      "event": "init_done",
@@ -1506,12 +1506,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-1"
+     "cwd": "bench/.work/t3/emp-signature-v12-low-1"
     },
     {
      "event": "init_done",
@@ -1604,14 +1604,14 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-0.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-0"
+     "cwd": "bench/.work/t3/emp-signature-v12-0"
     },
     {
      "event": "init_done",
@@ -1705,14 +1705,14 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-1.jsonl",
    "codemap_tools": [
     "codemap_search"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-1"
+     "cwd": "bench/.work/t3/emp-signature-v12-1"
     },
     {
      "event": "init_done",
@@ -1830,12 +1830,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-low-0"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-low-0"
     },
     {
      "event": "init_done",
@@ -1878,12 +1878,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (4 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-rename-repo-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-rename-repo-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-rename-repo-v12-low-1"
+     "cwd": "bench/.work/t3/emp-rename-repo-v12-low-1"
     },
     {
      "event": "init_done",
@@ -1926,14 +1926,14 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-big-v12-low-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-low-0"
+     "cwd": "bench/.work/t3/emp-big-v12-low-0"
     },
     {
      "event": "init_done",
@@ -1982,14 +1982,14 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-big-v12-low-1.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-low-1"
+     "cwd": "bench/.work/t3/emp-big-v12-low-1"
     },
     {
      "event": "init_done",
@@ -2038,14 +2038,14 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-big-v12-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-0"
+     "cwd": "bench/.work/t3/emp-big-v12-0"
     },
     {
      "event": "init_done",
@@ -2094,14 +2094,14 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-1.jsonl",
+   "raw": "bench/.work/raw/emp-big-v12-1.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-1"
+     "cwd": "bench/.work/t3/emp-big-v12-1"
     },
     {
      "event": "init_done",
@@ -2150,12 +2150,12 @@
    "repeat": 0,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-low-0"
+     "cwd": "bench/.work/t3/emp-span-v12-low-0"
     },
     {
      "event": "init_done",
@@ -2210,12 +2210,12 @@
    "repeat": 1,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-low-1"
+     "cwd": "bench/.work/t3/emp-span-v12-low-1"
     },
     {
      "event": "init_done",
@@ -2270,12 +2270,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-low-0"
+     "cwd": "bench/.work/t3/emp-multifile-v12-low-0"
     },
     {
      "event": "init_done",
@@ -2332,12 +2332,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-low-1"
+     "cwd": "bench/.work/t3/emp-multifile-v12-low-1"
     },
     {
      "event": "init_done",
@@ -2394,12 +2394,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-low-0"
+     "cwd": "bench/.work/t3/emp-split-v12-low-0"
     },
     {
      "event": "init_done",
@@ -2449,12 +2449,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-low-1"
+     "cwd": "bench/.work/t3/emp-split-v12-low-1"
     },
     {
      "event": "init_done",
@@ -2504,14 +2504,14 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-low-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-low-0"
+     "cwd": "bench/.work/t3/cp-edit-v12-low-0"
     },
     {
      "event": "init_done",
@@ -2560,12 +2560,12 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-low-1"
+     "cwd": "bench/.work/t3/cp-edit-v12-low-1"
     },
     {
      "event": "init_done",
@@ -2614,7 +2614,7 @@
    "repeat": 0,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-baseline-0.jsonl",
+   "raw": "bench/.work/raw/emp-span-baseline-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -2639,7 +2639,7 @@
    "repeat": 1,
    "success": false,
    "why": "needle missing (adapted edit never landed)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-baseline-1.jsonl",
+   "raw": "bench/.work/raw/emp-span-baseline-1.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -2664,7 +2664,7 @@
    "repeat": 2,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-baseline-2.jsonl",
+   "raw": "bench/.work/raw/emp-span-baseline-2.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -2689,7 +2689,7 @@
    "repeat": 3,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-baseline-3.jsonl",
+   "raw": "bench/.work/raw/emp-span-baseline-3.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -2714,12 +2714,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-0"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -2779,12 +2779,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-1"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -2847,14 +2847,14 @@
    "repeat": 0,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-0.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-typellm-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-0"
+     "cwd": "bench/.work/t3/emp-span-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -2912,14 +2912,14 @@
    "repeat": 1,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-1.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-typellm-1.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-1"
+     "cwd": "bench/.work/t3/emp-span-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -2977,12 +2977,12 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-typellm-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-typellm-0"
+     "cwd": "bench/.work/t3/cp-edit-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -3029,12 +3029,12 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-typellm-1.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-typellm-1"
+     "cwd": "bench/.work/t3/cp-edit-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -3081,7 +3081,7 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-baseline-0.jsonl",
+   "raw": "bench/.work/raw/emp-split-baseline-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -3106,7 +3106,7 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-baseline-1.jsonl",
+   "raw": "bench/.work/raw/emp-split-baseline-1.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -3131,7 +3131,7 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-baseline-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-baseline-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -3156,7 +3156,7 @@
    "repeat": 1,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-baseline-1.jsonl",
+   "raw": "bench/.work/raw/cp-edit-baseline-1.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "codemode_calls": 0,
@@ -3181,12 +3181,12 @@
    "repeat": 2,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-2.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-2.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-2"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-2"
     },
     {
      "event": "init_done",
@@ -3252,12 +3252,12 @@
    "repeat": 3,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-typellm-3.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-typellm-3.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-typellm-3"
+     "cwd": "bench/.work/t3/emp-split-v12-typellm-3"
     },
     {
      "event": "init_done",
@@ -3317,14 +3317,14 @@
    "repeat": 2,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-2.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-typellm-2.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-2"
+     "cwd": "bench/.work/t3/emp-span-v12-typellm-2"
     },
     {
      "event": "init_done",
@@ -3382,14 +3382,14 @@
    "repeat": 3,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-typellm-3.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-typellm-3.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-typellm-3"
+     "cwd": "bench/.work/t3/emp-span-v12-typellm-3"
     },
     {
      "event": "init_done",
@@ -3447,12 +3447,12 @@
    "repeat": 2,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-2.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-2.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-2"
+     "cwd": "bench/.work/t3/emp-split-v12-2"
     },
     {
      "event": "init_done",
@@ -3500,12 +3500,12 @@
    "repeat": 3,
    "success": true,
    "why": "multi-file ok (1 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-split-v12-3.jsonl",
+   "raw": "bench/.work/raw/emp-split-v12-3.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-split-v12-3"
+     "cwd": "bench/.work/t3/emp-split-v12-3"
     },
     {
      "event": "init_done",
@@ -3559,14 +3559,14 @@
    "repeat": 2,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-2.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-2.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-2"
+     "cwd": "bench/.work/t3/emp-span-v12-2"
     },
     {
      "event": "init_done",
@@ -3619,14 +3619,14 @@
    "repeat": 3,
    "success": true,
    "why": "adapted edit landed, single file",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-span-v12-3.jsonl",
+   "raw": "bench/.work/raw/emp-span-v12-3.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-span-v12-3"
+     "cwd": "bench/.work/t3/emp-span-v12-3"
     },
     {
      "event": "init_done",
@@ -3680,12 +3680,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-typellm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-0"
+     "cwd": "bench/.work/t3/emp-multifile-v12-typellm-0"
     },
     {
      "event": "init_done",
@@ -3740,12 +3740,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-typellm-1.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-typellm-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-typellm-1"
+     "cwd": "bench/.work/t3/emp-multifile-v12-typellm-1"
     },
     {
      "event": "init_done",
@@ -3800,12 +3800,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (8 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-manyfile-cm-v12-cm-0.jsonl",
+   "raw": "bench/.work/raw/emp-manyfile-cm-v12-cm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-manyfile-cm-v12-cm-0"
+     "cwd": "bench/.work/t3/emp-manyfile-cm-v12-cm-0"
     },
     {
      "event": "init_done",
@@ -3839,12 +3839,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (8 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-manyfile-v12-cm-0.jsonl",
+   "raw": "bench/.work/raw/emp-manyfile-v12-cm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-manyfile-v12-cm-0"
+     "cwd": "bench/.work/t3/emp-manyfile-v12-cm-0"
     },
     {
      "event": "init_done",
@@ -3878,12 +3878,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (8 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-manyfile-cm-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-manyfile-cm-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-manyfile-cm-v12-0"
+     "cwd": "bench/.work/t3/emp-manyfile-cm-v12-0"
     },
     {
      "event": "init_done",
@@ -3917,12 +3917,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (8 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-manyfile-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-manyfile-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-manyfile-v12-0"
+     "cwd": "bench/.work/t3/emp-manyfile-v12-0"
     },
     {
      "event": "init_done",
@@ -3956,12 +3956,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-cm-v12-cm-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-cm-v12-cm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-cm-v12-cm-0"
+     "cwd": "bench/.work/t3/emp-multifile-cm-v12-cm-0"
     },
     {
      "event": "init_done",
@@ -4105,12 +4105,12 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L43-54, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-edit-v12-cm-0.jsonl",
+   "raw": "bench/.work/raw/cp-edit-v12-cm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-edit-v12-cm-0"
+     "cwd": "bench/.work/t3/cp-edit-v12-cm-0"
     },
     {
      "event": "init_done",
@@ -4159,12 +4159,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (2 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multifile-v12-cm-0.jsonl",
+   "raw": "bench/.work/raw/emp-multifile-v12-cm-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-multifile-v12-cm-0"
+     "cwd": "bench/.work/t3/emp-multifile-v12-cm-0"
     },
     {
      "event": "init_done",
@@ -4218,7 +4218,7 @@
    "repeat": 0,
    "success": true,
    "why": "moved to L1038",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-move-baseline-0.jsonl",
+   "raw": "bench/.work/raw/emp-move-baseline-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "wall_s": 103.1,
@@ -4241,7 +4241,7 @@
    "repeat": 0,
    "success": true,
    "why": "moved to L1038",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-move-v12-0.jsonl",
+   "raw": "bench/.work/raw/emp-move-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "wall_s": 86.8,

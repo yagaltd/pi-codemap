@@ -13,19 +13,19 @@ TASKS = os.path.join(BENCH, "tasks")
 # Frozen at authoring time. A drift here means re-validating gold.
 REPOS = {
     "code-parser": {
-        "root": "/home/aurel/Documents/current/code-parser",
+        "root": os.path.expanduser("~/Documents/current/code-parser"),
         "subroot": "",
         "langs": "rust",
         "sha": "68f2303",
     },
     "empryo": {
-        "root": "/home/aurel/Documents/vibe/Empryo",
+        "root": os.path.expanduser("~/Documents/vibe/Empryo"),
         "subroot": "",
         "langs": "typescript,javascript",
         "sha": "669ff91",
     },
     "cognitiveos": {
-        "root": "/home/aurel/Documents/current/CognitiveOS",
+        "root": os.path.expanduser("~/Documents/current/CognitiveOS"),
         "subroot": "v3",
         "langs": "rust",
         "sha": "f7c6f58c3",

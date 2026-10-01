@@ -11,12 +11,12 @@
    "repeat": 0,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-0.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-low-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-0"
+     "cwd": "bench/.work/t3/emp-signature-v12-low-0"
     },
     {
      "event": "init_done",
@@ -121,12 +121,12 @@
    "repeat": 1,
    "success": true,
    "why": "multi-file ok (3 files)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-signature-v12-low-1.jsonl",
+   "raw": "bench/.work/raw/emp-signature-v12-low-1.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-signature-v12-low-1"
+     "cwd": "bench/.work/t3/emp-signature-v12-low-1"
     },
     {
      "event": "init_done",

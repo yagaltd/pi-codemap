@@ -11,7 +11,7 @@
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L367-385, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-multi-v1-0.jsonl",
+   "raw": "bench/.work/raw/emp-multi-v1-0.jsonl",
    "codemap_tools": [],
    "jev_events": [],
    "wall_s": 27.8,

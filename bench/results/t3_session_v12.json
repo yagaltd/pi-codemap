@@ -11,12 +11,12 @@
    "repeat": 0,
    "success": true,
    "why": "all answers present",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/cp-sess-v12-0.jsonl",
+   "raw": "bench/.work/raw/cp-sess-v12-0.jsonl",
    "codemap_tools": [],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/cp-sess-v12-0"
+     "cwd": "bench/.work/t3/cp-sess-v12-0"
     },
     {
      "event": "init_done",
