@@ -51,6 +51,8 @@ interface State {
 	snapshotMeta: { files: number; omitted: number; estTokens: number };
 	lastServedMs: number;
 	filesIndexed: number;
+	kpi: { routeP: number | null; routed: string | null; gateFires: number; refusals: number; verified: number; tlTokens: number };
+	uiCtx?: { hasUI: boolean; ui: { setStatus(k: string, v: string): void } };
 	/** v1.1 router: decided once per session (first agent start). */
 	jevRouterDecided?: boolean;
 	jevRouterSkipped?: boolean;
@@ -477,6 +479,8 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		snapshotMeta: { files: 0, omitted: 0, estTokens: 0 },
 		lastServedMs: 0,
 		filesIndexed: 0,
+		kpi: { routeP: null as number | null, routed: null as string | null, gateFires: 0, refusals: 0, verified: 0, tlTokens: 0 },
+		uiCtx: undefined as { hasUI: boolean; ui: { setStatus(k: string, v: string): void } } | undefined,
 	};
 
 	/** Classifier backend — the USER chooses: CODEMAP_CLASSIFIER env override,
@@ -580,7 +584,8 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 					}
 					return 0;
 				};
-				const out = { effortOk: p("effort") >= 0.5, cheaperOk: cheaperQuestion ? p("cheaper") >= 0.5 : null, p: p("effort") };
+				const u = resp.usage;
+				const out = { effortOk: p("effort") >= 0.5, cheaperOk: cheaperQuestion ? p("cheaper") >= 0.5 : null, p: p("effort"), tlTokens: u ? u.input_tokens + u.thinking_tokens : 0 };
 				verdictCache.set(key, out);
 				return out;
 			}
@@ -594,7 +599,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			if (cheaperQuestion) questions.cheaper = cheaperQuestion as { type: "bool"; instructions: string; criteria: { true: string; false: string } };
 			const sr = await systemOne(prompt.slice(0, 4000), questions);
 			if (!sr) return null;
-			const out = { effortOk: (sr.answers.effort ?? 0) >= 0.5, cheaperOk: cheaperQuestion ? (sr.answers.cheaper ?? 0) >= 0.5 : null, p: sr.answers.effort ?? 0 };
+			const out = { effortOk: (sr.answers.effort ?? 0) >= 0.5, cheaperOk: cheaperQuestion ? (sr.answers.cheaper ?? 0) >= 0.5 : null, p: sr.answers.effort ?? 0, tlTokens: 0 };
 			verdictCache.set(key, out);
 			return out;
 		} catch {
@@ -610,12 +615,38 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				/* logging never breaks the request path */
 			}
 		}
+		updateStatus(e);
+	}
+
+	/** Bottom-bar KPIs. The map glyph marks the segment as codemap's; the
+	 * compact " · " separators follow pi's own status formatting; zero
+	 * counters stay hidden so the bar never shows vanity zeros. */
+	function updateStatus(e?: Record<string, unknown>): void {
+		if (e) {
+			if (e.event === "router" && typeof e.p === "number") st.kpi.routeP = e.p as number;
+			if (e.event === "route" && typeof e.thinking === "string") st.kpi.routed = e.thinking as string;
+			if (e.event === "gate" && e.decision === "fired") st.kpi.gateFires++;
+			if (e.event === "edit_guard" && String(e.decision ?? "").startsWith("refused")) st.kpi.refusals++;
+			if (e.event === "edit_verify" && e.fired !== null && e.fired !== undefined) st.kpi.verified++;
+			if (typeof e.tl_tokens === "number") st.kpi.tlTokens += e.tl_tokens as number;
+		}
+		const ctx = st.uiCtx;
+		if (!ctx?.hasUI) return;
+		const parts = [`🗺 ${st.filesIndexed}f·${st.snapshotMeta.estTokens}tk`];
+		if (st.kpi.routed) parts.push(`↧${st.kpi.routed}(${st.kpi.routeP !== null ? st.kpi.routeP.toFixed(2) : "-"})`);
+		if (st.kpi.gateFires) parts.push(`gate ${st.kpi.gateFires}`);
+		if (st.kpi.refusals) parts.push(`ref ${st.kpi.refusals}`);
+		if (st.kpi.verified) parts.push(`ver ${st.kpi.verified}`);
+		if (st.kpi.tlTokens) parts.push(`tl ${st.kpi.tlTokens >= 1000 ? `${(st.kpi.tlTokens / 1000).toFixed(1)}k` : st.kpi.tlTokens}`);
+		if (st.enabled) ctx.ui.setStatus("codemap", parts.join(" · "));
 	}
 
 	pi.on("session_start", async (_event, ctx) => {
 		init(st, ctx);
+		st.uiCtx = ctx as unknown as { hasUI: boolean; ui: { setStatus(k: string, v: string): void } };
+		updateStatus();
 		if (st.enabled && ctx.hasUI) {
-			ctx.ui.setStatus("codemap", `map ${st.filesIndexed}f · snap ${st.snapshotMeta.estTokens}tok`);
+			ctx.ui.setStatus("codemap", `🗺 ${st.filesIndexed}f · ${st.snapshotMeta.estTokens}tk`);
 		} else if (!st.enabled && ctx.hasUI) {
 			ctx.ui.setStatus("codemap", `codemap off (${(st.reason ?? "").slice(0, 40)})`);
 		}
@@ -884,7 +915,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 						const v = activeBackend === "typellm"
 							? await typellmVerifyEdit({ request: req, diff })
 							: await jevVerifyEdit({ request: req, diff });
-						jevLog({ event: "edit_verify", fired: v?.fired ?? null, signals: v?.signals, why: v?.why });
+						jevLog({ event: "edit_verify", fired: v?.fired ?? null, signals: v?.signals, why: v?.why, tl_tokens: v?.usage ? v.usage.input + v.usage.thinking : undefined });
 						if (v?.fired) {
 							escalateNext = true;
 							detail += ` Verification flagged this low-effort edit (${v.why}) — re-check it carefully or redo it with more reasoning.`;
@@ -1000,7 +1031,7 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				routedLowThisTurn = decision.thinking === "low";
 				const wired = wire(decision.thinking ?? "high", decision.tier ?? labels[labels.length - 1]);
 				if (!wired) return { model: request.previous?.model ?? ctx.model, thinkingLevel: "high" };
-				jevLog({ event: "route", thinking: decision.thinking, tier: decision.tier, reason: decision.reason, effort: effort });
+				jevLog({ event: "route", thinking: decision.thinking, tier: decision.tier, reason: decision.reason, effort: effort, tl_tokens: effort?.tlTokens || undefined });
 				return wired;
 			},
 		});

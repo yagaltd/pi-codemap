@@ -310,7 +310,7 @@ export function typellmAvailable(): boolean {
 
 // ── routed-edit verifier (DAG: fire signal + why in one call) ─────────────
 
-export interface VerifyResult { fired: boolean; why: string; signals: Record<string, number> }
+export interface VerifyResult { fired: boolean; why: string; signals: Record<string, number>; usage?: { input: number; thinking: number } }
 
 /** TypeLLM verifier for a routed (low-effort) edit: three independent
  * P(wrong) roots; why ∷roots only explains when something fired. One call. */
@@ -359,7 +359,8 @@ export async function typellmVerifyEdit(opts: {
 		const signals = { incomplete: p("incomplete"), unrelated: p("unrelated"), dropped: p("dropped") };
 		const fired = Object.values(signals).some((v) => v >= 0.7);
 		const why = typeof r.why === "string" ? r.why : "ok";
-		return { fired, why, signals };
+		const u = resp.usage;
+		return { fired, why, signals, usage: u ? { input: u.input_tokens, thinking: u.thinking_tokens } : undefined };
 	} catch {
 		return null;
 	}
