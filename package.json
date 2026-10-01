@@ -1,5 +1,16 @@
 {
   "name": "pi-codemap",
+  "version": "0.1.0",
+  "description": "Code map + guarded edit + Jev router/gate for the pi coding agent",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yagaltd/pi-codemap.git"
+  },
+  "keywords": ["pi-package"],
   "private": true,
-  "type": "module"
+  "type": "module",
+  "pi": {
+    "extensions": ["./pi-codemap-v12/index.ts"]
+  }
 }
