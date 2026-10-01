@@ -4,7 +4,7 @@
  * their failure mode is fail-open and covered by the bench.)
  */
 import assert from "node:assert/strict";
-import { classifySpan, gateTriggered, isTrivialPrompt, redactSend, subQueryTerms } from "./jev.ts";
+import { classifySpan, gateTriggered, isTrivialPrompt, loadRoutingTiers, redactSend, routeDecision, subQueryTerms } from "./jev.ts";
 import { batchRiskQuestions, spanGuidanceQuestions, typellmAnswers, typellmQuestions } from "./typellm.ts";
 
 // TRIVIAL_RE: high-precision only — these skip for free
@@ -66,5 +66,17 @@ const br = batchRiskQuestions();
 assert.deepEqual(br.risk.depends_on, ["scope"]);
 assert.deepEqual(br.why.depends_on, ["scope", "risk"]);
 assert.deepEqual(br.risk.enum, [0.0, 0.25, 0.5, 0.75, 1.0], "number-typed ladder");
+
+// routing policy (pure; ported guards: fail-open, override wins, step-up)
+assert.deepEqual(routeDecision({ effortOk: null, cheaperOk: null, tiers: ["low"], current: "glm-5.3", userOverride: false }), { thinking: null, tier: null, reason: "no effort verdict" }, "fail-open on unknown");
+assert.deepEqual(routeDecision({ effortOk: true, cheaperOk: true, tiers: ["low", "std"], current: "glm-5.3", userOverride: true }).reason, "user override — no routing", "override wins");
+// effort and model tier are INDEPENDENT verdicts (codex-router design):
+// mechanical task + no cheaper model needed => low effort on the standard tier
+assert.deepEqual(routeDecision({ effortOk: true, cheaperOk: false, tiers: ["low", "std"], current: "std", userOverride: false }), { thinking: "low", tier: "std", reason: "full tier needed" }, "stay on current configured tier");
+assert.deepEqual(routeDecision({ effortOk: true, cheaperOk: false, tiers: ["low", "std"], current: "glm-5.3", userOverride: false }), { thinking: "low", tier: null, reason: "full tier needed (current not a configured tier)" }, "never fabricate a tier");
+assert.deepEqual(routeDecision({ effortOk: false, cheaperOk: null, tiers: null, current: "glm-5.3", userOverride: false }), { thinking: "high", tier: null, reason: "effort verdict applied; no tiers configured" });
+assert.equal(routeDecision({ effortOk: true, cheaperOk: true, tiers: ["low"], current: "glm-5.3", userOverride: false }).tier, "low");
+// tiers config loader: absent file is fine (null)
+assert.ok(loadRoutingTiers() === null || typeof loadRoutingTiers() === "object");
 
 console.log("jev.selfcheck: all assertions passed");

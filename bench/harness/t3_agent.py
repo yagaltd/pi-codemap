@@ -36,6 +36,7 @@ CONFIGS = {
                "-e", "builtin:codemode",
                "--tools", "read,bash,edit,write,codemode"],
     "v12-typellm": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts")],
+    "v12-low": ["--extension", os.path.join(C.BENCH, "configs", "v12.ts"), "--thinking", "low"],
 }
 
 

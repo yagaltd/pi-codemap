@@ -25,6 +25,9 @@
  *  each decision is appended to .codemap-jev.log when CODEMAP_JEV_LOG=1 so
  *  the bench can verify router/gate behavior from artifacts, not guesses.
  */
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import type { ClassifierResult } from "@earendil-works/pi-coding-agent";
 
 export type ClassifyFn = (
@@ -108,6 +111,67 @@ export async function systemOne(
 	}
 }
 
+// ── routing (log-only Phase 1): effort/model-tier verdicts ───────────────
+
+export interface RoutingTiers { [label: string]: { model: string; profile: string } }
+
+/** Human-curated tier ladder (~/.config/pi-codemap/models.json). Absent file
+ * = routing data collection runs without the tier question. Never acted on
+ * in this phase — verdicts are logged for calibration only. */
+export function loadRoutingTiers(): RoutingTiers | null {
+	const p = join(homedir(), ".config", "pi-codemap", "models.json");
+	if (!existsSync(p)) return null;
+	try {
+		const parsed = JSON.parse(readFileSync(p, "utf8")) as RoutingTiers;
+		const labels = Object.keys(parsed);
+		if (labels.length === 0) return null;
+		for (const k of labels)
+			if (typeof parsed[k]?.model !== "string" || typeof parsed[k]?.profile !== "string") return null;
+		return parsed;
+	} catch {
+		return null;
+	}
+}
+
+export interface RouteInput {
+	/** Verdict: could this task succeed at minimal reasoning effort? */
+	effortOk: boolean | null;
+	/** Verdict: would a cheaper configured tier suffice? */
+	cheaperOk: boolean | null;
+	/** Configured tier labels, cheapest first. */
+	tiers: string[] | null;
+	/** Model/thinking the user (or default) already runs. */
+	current: string;
+	/** User explicitly chose model/thinking — routing never overrides. */
+	userOverride: boolean;
+}
+
+export interface RouteDecision {
+	thinking: "low" | "high" | null;
+	tier: string | null;
+	reason: string;
+}
+
+/** Pure policy, ported from the studied routers' guards: user override wins;
+ * unknown verdicts change nothing (fail-open); tier selection steps UP when
+ * the chosen tier is unavailable; never acts without configured tiers. */
+export function routeDecision(input: RouteInput): RouteDecision {
+	if (input.userOverride) return { thinking: null, tier: null, reason: "user override — no routing" };
+	if (input.effortOk === null) return { thinking: null, tier: null, reason: "no effort verdict" };
+	const thinking = input.effortOk ? "low" : "high";
+	if (input.cheaperOk === null || !input.tiers || input.tiers.length === 0)
+		return { thinking, tier: null, reason: "effort verdict applied; no tiers configured" };
+	if (input.cheaperOk) return { thinking, tier: input.tiers[0], reason: "cheaper tier suffices" };
+	// Full tier needed: stay on the current tier ONLY if it is a configured
+	// label; otherwise change nothing (we do not fabricate tiers).
+	const cur = input.tiers.includes(input.current) ? input.current : null;
+	return {
+		thinking,
+		tier: cur,
+		reason: cur ? "full tier needed" : "full tier needed (current not a configured tier)",
+	};
+}
+
 // ── router ────────────────────────────────────────────────────────────────
 
 export type RouterDecision = "code" | "skip" | "unavailable";
@@ -122,7 +186,8 @@ export async function routeFirstPrompt(
 		log?.({ event: "router", decision: "skip", how: "trivial-regex" });
 		return "skip";
 	}
-	const r = await systemOne(redactSend(prompt), {
+	const tiers = loadRoutingTiers();
+	const questions: Record<string, BoolQuestion> = {
 		codebase_task: {
 			type: "bool",
 			instructions:
@@ -132,14 +197,44 @@ export async function routeFirstPrompt(
 				false: "No — answerable from git history, docs, general knowledge, or one trivial command.",
 			},
 		},
-	});
+		low_effort_sufficient: {
+			type: "bool",
+			instructions:
+				"Could this task be completed correctly with MINIMAL reasoning effort — a mechanical change with an obvious, well-defined solution and no subtle interactions?",
+			criteria: {
+				true: "Yes — mechanical/obvious; minimal reasoning suffices.",
+				false: "No — it needs substantial reasoning (debugging, design, cross-file effects).",
+			},
+		},
+	};
+	if (tiers) {
+		questions.cheaper_model_sufficient = {
+			type: "bool",
+			instructions: `Would a cheaper, less capable model complete this task correctly? Cheaper tiers available: ${Object.keys(tiers).join(", ")}.`,
+			criteria: {
+				true: "Yes — the cheap tier suffices for a correct result.",
+				false: "No — this needs the full-capability model.",
+			},
+		};
+	}
+	const r = await systemOne(redactSend(prompt), questions);
 	if (!r) {
 		log?.({ event: "router", decision: "unavailable" });
 		return "unavailable";
 	}
 	const p = r.answers.codebase_task ?? 1;
 	const decision: RouterDecision = p < 0.25 ? "skip" : "code";
-	log?.({ event: "router", decision, p, model: r.model });
+	// Phase 1 (log-only): routing verdicts recorded for calibration. NOTHING
+	// here changes the model or thinking level — see routeDecision().
+	log?.({
+		event: "router",
+		decision,
+		p,
+		model: r.model,
+		effort_ok: r.answers.low_effort_sufficient,
+		cheaper_ok: r.answers.cheaper_model_sufficient,
+		tiers: tiers ? Object.keys(tiers) : null,
+	});
 	return decision;
 }
 

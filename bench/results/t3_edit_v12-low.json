@@ -1,24 +1,80 @@
 {
  "tier": "t3",
  "suite": "edit",
- "config": "v12",
+ "config": "v12-low",
  "rows": [
   {
    "id": "emp-big",
    "repo": "empryo",
    "kind": "edit",
-   "config": "v12",
+   "config": "v12-low",
    "repeat": 0,
    "success": true,
    "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-0.jsonl",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-low-0.jsonl",
    "codemap_tools": [
     "codemap_locate"
    ],
    "jev_events": [
     {
      "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-0"
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-low-0"
+    },
+    {
+     "event": "init_done",
+     "files": 576
+    },
+    {
+     "event": "router",
+     "decision": "code",
+     "p": 0.91,
+     "model": "jev-latest",
+     "effort_ok": 0.94,
+     "tiers": null
+    },
+    {
+     "event": "edit_called"
+    },
+    {
+     "event": "edit_guard",
+     "decision": "applied",
+     "file": "src/core/tools/index.ts",
+     "edits": 1,
+     "symbols": [
+      "buildTools L353-2072"
+     ]
+    }
+   ],
+   "codemode_calls": 0,
+   "classifier": "auto",
+   "wall_s": 21.9,
+   "tokens_in": 22378,
+   "req1_in": 21729,
+   "in_steady": 649,
+   "tokens_out": 211,
+   "cache_read": 23680,
+   "cache_write": 0,
+   "turns": 5,
+   "tool_calls": 4,
+   "files_read": 1,
+   "model": "glm-5.3"
+  },
+  {
+   "id": "emp-big",
+   "repo": "empryo",
+   "kind": "edit",
+   "config": "v12-low",
+   "repeat": 1,
+   "success": true,
+   "why": "precise (symbol L1928-1987, single file)",
+   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-low-1.jsonl",
+   "codemap_tools": [
+    "codemap_locate"
+   ],
+   "jev_events": [
+    {
+     "event": "ext_loaded",
+     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-low-1"
     },
     {
      "event": "init_done",
@@ -47,72 +103,16 @@
    ],
    "codemode_calls": 0,
    "classifier": "auto",
-   "wall_s": 16.6,
-   "tokens_in": 22883,
-   "req1_in": 21727,
-   "in_steady": 1156,
-   "tokens_out": 355,
-   "cache_read": 24128,
+   "wall_s": 13.5,
+   "tokens_in": 22585,
+   "req1_in": 21729,
+   "in_steady": 856,
+   "tokens_out": 151,
+   "cache_read": 23872,
    "cache_write": 0,
-   "turns": 4,
-   "tool_calls": 3,
-   "files_read": 1,
-   "model": "glm-5.3"
-  },
-  {
-   "id": "emp-big",
-   "repo": "empryo",
-   "kind": "edit",
-   "config": "v12",
-   "repeat": 1,
-   "success": true,
-   "why": "precise (symbol L1928-1987, single file)",
-   "raw": "/home/aurel/Documents/current/pi-codemap/bench/.work/raw/emp-big-v12-1.jsonl",
-   "codemap_tools": [
-    "codemap_locate"
-   ],
-   "jev_events": [
-    {
-     "event": "ext_loaded",
-     "cwd": "/home/aurel/Documents/current/pi-codemap/bench/.work/t3/emp-big-v12-1"
-    },
-    {
-     "event": "init_done",
-     "files": 576
-    },
-    {
-     "event": "router",
-     "decision": "code",
-     "p": 0.9,
-     "model": "jev-latest",
-     "effort_ok": 0.94,
-     "tiers": null
-    },
-    {
-     "event": "edit_called"
-    },
-    {
-     "event": "edit_guard",
-     "decision": "applied",
-     "file": "src/core/tools/index.ts",
-     "edits": 1,
-     "symbols": [
-      "buildTools L353-2072"
-     ]
-    }
-   ],
-   "codemode_calls": 0,
-   "classifier": "auto",
-   "wall_s": 18.3,
-   "tokens_in": 23167,
-   "req1_in": 21727,
-   "in_steady": 1440,
-   "tokens_out": 393,
-   "cache_read": 24448,
-   "cache_write": 0,
-   "turns": 5,
-   "tool_calls": 4,
-   "files_read": 1,
+   "turns": 3,
+   "tool_calls": 2,
+   "files_read": 0,
    "model": "glm-5.3"
   }
  ]
