@@ -118,6 +118,25 @@ Findings:
 
 **Decision:** codemode is not integrated. The guarded `edit` plus plain tool calls (or a bash loop) is cheaper, is what the model prefers, and is already constraint-enforced. Revisit only if a workload appears where 1 round-trip is worth ~10x tokens - or for Jev-in-script experiments (`models.classify()` inside a codemode script), which remain untested.
 
+## TypeLLM (optional second provider)
+
+[TypeLLM](https://typellm.ai) is Jev-style type-safe generation on ordinary
+LLMs, plus what Jev cannot do: free-text answers, number/integer types,
+per-field thinking (with reasoning traces), image input and `depends_on`
+decision graphs. Not wired into the extension yet — this ships the credential
+plumbing so pi-codemap gets its own identity:
+
+- key file: `~/.config/pi-codemap/typellm.key` (chmod 600)
+- setup: `npx tsx ext/typellm.ts setup` (paste or pipe the `tl-sk-…` key)
+- verify: `npx tsx ext/typellm.ts verify` — one live call proving
+  string/number/boolean/enum answers
+
+Key chain is **file first, `TYPELLM_API_KEY` env last** (inverted from
+mailbox-parser on purpose: a global env key must not silently override the
+per-project identity). The Rust sibling lives in code-parser at
+`~/.config/code-parser/typellm.key` (`code-map typellm setup|verify`).
+
+
 ## Bench
 
 ```bash
