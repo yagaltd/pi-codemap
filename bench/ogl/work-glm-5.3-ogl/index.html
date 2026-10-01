@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torus Knot — OGL</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            height: 100%;
+            overflow: hidden;
+            background: #0b0b10;
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <script type="module">
+        import { Renderer, Camera, Program, Mesh, Geometry, Transform, Orbit } from 'https://esm.sh/ogl';
+
+        // ------------------------------------------------------------------
+        // TorusKnot geometry (p,q) — swept tube along a knotted curve,
+        // using parallel-transport frames. Extends OGL's Geometry.
+        // ------------------------------------------------------------------
+        class TorusKnot extends Geometry {
+            constructor(
+                gl,
+                { radius = 1, tube = 0.4, tubularSegments = 256, radialSegments = 48, p = 2, q = 3, attributes = {} } = {}
+            ) {
+                const numVertices = (tubularSegments + 1) * (radialSegments + 1);
+                const numIndices = tubularSegments * radialSegments * 6;
+
+                const positions = new Float32Array(numVertices * 3);
+                const normals = new Float32Array(numVertices * 3);
+                const uvs = new Float32Array(numVertices * 2);
+                const indices = numVertices > 65536 ? new Uint32Array(numIndices) : new Uint16Array(numIndices);
+
+                // small vec3 helpers (plain math, no dependencies)
+                const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+                const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+                const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+                const norm = (a) => {
+                    const l = Math.hypot(a[0], a[1], a[2]) || 1;
+                    return [a[0] / l, a[1] / l, a[2] / l];
+                };
+                // Rodrigues rotation of v around unit axis by angle (cosA, sinA)
+                const rotate = (v, k, cosA, sinA) => {
+                    const c = cross(k, v);
+                    const d = dot(v, k) * (1 - cosA);
+                    return [
+                        v[0] * cosA + k[0] * d + c[0] * sinA,
+                        v[1] * cosA + k[1] * d + c[1] * sinA,
+                        v[2] * cosA + k[2] * d + c[2] * sinA,
+                    ];
+                };
+
+                // Point on the (p,q) knot curve, u in [0, p * 2*PI]
+                const curve = (u) => {
+                    const cu = Math.cos(u);
+                    const su = Math.sin(u);
+                    const phi = (q / p) * u;
+                    const cs = Math.cos(phi);
+                    return [
+                        radius * (2 + cs) * 0.5 * cu,
+                        radius * (2 + cs) * 0.5 * su,
+                        radius * Math.sin(phi) * 0.5,
+                    ];
+                };
+
+                let N = null;
+                let Tprev = null;
+
+                for (let i = 0; i <= tubularSegments; i++) {
+                    const u = (i / tubularSegments) * p * Math.PI * 2;
+
+                    const P = curve(u);
+                    const P2 = curve(u + 0.0001);
+                    const T = norm(sub(P2, P));
+
+                    // parallel-transport the normal along the curve
+                    if (N === null) {
+                        // seed an arbitrary normal orthogonal to T
+                        let seed = cross(T, [0, 0, 1]);
+                        if (dot(seed, seed) < 1e-6) seed = cross(T, [0, 1, 0]);
+                        N = norm(sub(seed, T.map((c) => c * dot(seed, T))));
+                    } else {
+                        const axis = cross(Tprev, T);
+                        const axisLen = Math.hypot(axis[0], axis[1], axis[2]);
+                        if (axisLen > 1e-6) {
+                            const k = [axis[0] / axisLen, axis[1] / axisLen, axis[2] / axisLen];
+                            const c = Math.max(-1, Math.min(1, dot(Tprev, T)));
+                            N = rotate(N, k, c, Math.sqrt(Math.max(0, 1 - c * c)));
+                        }
+                    }
+                    Tprev = T;
+
+                    const B = cross(T, N);
+
+                    // ring of vertices around the tube
+                    for (let j = 0; j <= radialSegments; j++) {
+                        const v = (j / radialSegments) * Math.PI * 2;
+                        const cx = -Math.cos(v);
+                        const sx = Math.sin(v);
+
+                        const nx = cx * N[0] + sx * B[0];
+                        const ny = cx * N[1] + sx * B[1];
+                        const nz = cx * N[2] + sx * B[2];
+
+                        const idx = i * (radialSegments + 1) + j;
+                        positions[idx * 3 + 0] = P[0] + tube * nx;
+                        positions[idx * 3 + 1] = P[1] + tube * ny;
+                        positions[idx * 3 + 2] = P[2] + tube * nz;
+                        normals[idx * 3 + 0] = nx;
+                        normals[idx * 3 + 1] = ny;
+                        normals[idx * 3 + 2] = nz;
+                        uvs[idx * 2 + 0] = i / tubularSegments;
+                        uvs[idx * 2 + 1] = j / radialSegments;
+                    }
+                }
+
+                // indices
+                let ptr = 0;
+                for (let j = 1; j <= tubularSegments; j++) {
+                    for (let i = 1; i <= radialSegments; i++) {
+                        const a = (radialSegments + 1) * (j - 1) + (i - 1);
+                        const b = (radialSegments + 1) * j + (i - 1);
+                        const c = (radialSegments + 1) * j + i;
+                        const d = (radialSegments + 1) * (j - 1) + i;
+
+                        indices.set([a, b, d, b, c, d], ptr);
+                        ptr += 6;
+                    }
+                }
+
+                Object.assign(attributes, {
+                    position: { size: 3, data: positions },
+                    normal: { size: 3, data: normals },
+                    uv: { size: 2, data: uvs },
+                    index: { data: indices },
+                });
+
+                super(gl, attributes);
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Setup
+        // ------------------------------------------------------------------
+        const renderer = new Renderer({
+            antialias: true,
+            dpr: Math.min(window.devicePixelRatio || 1, 2),
+        });
+        document.body.appendChild(renderer.gl.canvas);
+
+        renderer.gl.clearColor(0.043, 0.043, 0.063, 1); // dark background
+
+        const camera = new Camera(renderer.gl, { fov: 40, near: 0.1, far: 100 });
+        camera.position.set(0, 0, 5.8);
+
+        const scene = new Transform();
+
+        const geometry = new TorusKnot(renderer.gl, {
+            radius: 1,
+            tube: 0.4,
+            tubularSegments: 256,
+            radialSegments: 48,
+            p: 2,
+            q: 3,
+        });
+
+        const vertex = /* glsl */ `
+            precision highp float;
+
+            attribute vec3 position;
+            attribute vec3 normal;
+            attribute vec2 uv;
+
+            uniform mat4 modelViewMatrix;
+            uniform mat4 projectionMatrix;
+            uniform mat3 normalMatrix;
+
+            varying vec3 vNormal;
+            varying vec3 vViewPos;
+            varying vec2 vUv;
+
+            void main() {
+                vUv = uv;
+                vNormal = normalize(normalMatrix * normal);
+                vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                vViewPos = mvPosition.xyz;
+                gl_Position = projectionMatrix * mvPosition;
+            }
+        `;
+
+        const fragment = /* glsl */ `
+            precision highp float;
+
+            uniform float uTime;
+
+            varying vec3 vNormal;
+            varying vec3 vViewPos;
+            varying vec2 vUv;
+
+            void main() {
+                vec3 N = normalize(vNormal);
+                vec3 V = normalize(-vViewPos);
+
+                // key light
+                vec3 L1 = normalize(vec3(0.6, 0.8, 0.7));
+                float diff1 = max(dot(N, L1), 0.0);
+
+                // fill light
+                vec3 L2 = normalize(vec3(-0.7, -0.4, 0.5));
+                float diff2 = max(dot(N, L2), 0.0);
+
+                // rim light
+                float rim = pow(1.0 - max(dot(N, V), 0.0), 2.5);
+
+                // base color: blue -> violet blend by normal direction
+                vec3 base = mix(vec3(0.10, 0.38, 0.90), vec3(0.62, 0.22, 0.95), N.y * 0.5 + 0.5);
+
+                vec3 color = base * (0.12 + diff1 * 0.85 + diff2 * 0.25);
+                color += rim * vec3(0.35, 0.55, 1.0) * 0.7;
+
+                // specular
+                vec3 H = normalize(L1 + V);
+                float spec = pow(max(dot(N, H), 0.0), 48.0);
+                color += vec3(spec) * 0.45;
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `;
+
+        const program = new Program(renderer.gl, {
+            vertex,
+            fragment,
+            uniforms: {
+                uTime: { value: 0 },
+            },
+            cullFace: false, // avoid winding surprises along the seam
+        });
+
+        const mesh = new Mesh(renderer.gl, { geometry, program });
+        mesh.setParent(scene);
+
+        // Optional interactive orbit — drag to rotate, scroll to zoom
+        new Orbit(camera);
+
+        // ------------------------------------------------------------------
+        // Resize
+        // ------------------------------------------------------------------
+        function resize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            renderer.setSize(width, height);
+            camera.perspective({ aspect: width / height });
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // ------------------------------------------------------------------
+        // Animation loop
+        // ------------------------------------------------------------------
+        function update(time) {
+            requestAnimationFrame(update);
+
+            const t = time * 0.001;
+            program.uniforms.uTime.value = t;
+
+            // continuous rotation
+            mesh.rotation.y = t * 0.6;
+            mesh.rotation.x = 0.45 + Math.sin(t * 0.35) * 0.25;
+
+            renderer.render({ scene, camera });
+        }
+        requestAnimationFrame(update);
+    </script>
+</body>
+</html>

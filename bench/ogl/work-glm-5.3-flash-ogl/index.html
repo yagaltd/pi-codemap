@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OGL — Torus Knot</title>
+<style>
+    :root { color-scheme: dark; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; background: #05070f; }
+    canvas { display: block; width: 100vw; height: 100vh; }
+    .label {
+        position: fixed;
+        left: 20px;
+        bottom: 18px;
+        font: 500 11px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: rgba(215, 224, 255, 0.35);
+        user-select: none;
+        pointer-events: none;
+    }
+    .label b { color: rgba(235, 242, 255, 0.8); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="label"><b>(2,3) torus knot</b> &nbsp;·&nbsp; rendered with OGL</div>
+
+<script type="module">
+import {
+    Renderer,
+    Camera,
+    Transform,
+    Mesh,
+    Program,
+    Geometry,
+    Color,
+    Vec3,
+} from 'https://esm.sh/ogl';
+
+/* ------------------------------------------------------------------ */
+/*  Torus knot geometry                                                */
+/*  OGL has no TorusKnot primitive, so we sweep a tube along the       */
+/*  (p, q) knot curve ourselves and feed a raw OGL Geometry.           */
+/* ------------------------------------------------------------------ */
+function createTorusKnotGeometry(
+    gl,
+    { p = 2, q = 3, knotSegs = 256, tubeSegs = 28, scale = 0.78, tube = 0.42 } = {}
+) {
+    const TAU = Math.PI * 2;
+
+    // Curve: x = (2 + cos(qt))·cos(pt), y = (2 + cos(qt))·sin(pt), z = sin(qt)
+    const curve = (t) => {
+        const w = 2 + Math.cos(q * t);
+        return [w * Math.cos(p * t), w * Math.sin(p * t), Math.sin(q * t)];
+    };
+    const sub   = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    const add   = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+    const cross = (a, b) => [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ];
+    const norm = (a) => {
+        const l = Math.hypot(a[0], a[1], a[2]) || 1;
+        return [a[0] / l, a[1] / l, a[2] / l];
+    };
+
+    const numVerts = knotSegs * tubeSegs; // < 65536 → Uint16 indices
+    const positions = new Float32Array(numVerts * 3);
+    const normals   = new Float32Array(numVerts * 3);
+    const uvs       = new Float32Array(numVerts * 2);
+    const indices   = new Uint16Array(knotSegs * tubeSegs * 6);
+
+    const dt = 0.001;
+
+    for (let i = 0; i < knotSegs; i++) {
+        const t = (i / knotSegs) * TAU;
+        const P  = curve(t);
+        const p0 = curve(t - dt);
+        const p2 = curve(t + dt);
+
+        // Frenet-style frame from central differences.
+        // {T, N2, B} is orthonormal and right-handed, so the ring's
+        // outward surface normal is simply cos(θ)·N2 + sin(θ)·B.
+        const T  = norm(sub(p2, p0));                                        // tangent
+        const N  = norm(sub(add(p2, p0), [2 * P[0], 2 * P[1], 2 * P[2]]));   // curvature dir
+        const B  = norm(cross(T, N));                                        // bitangent
+        const N2 = cross(B, T);                                              // re-orthogonalized
+
+        for (let j = 0; j < tubeSegs; j++) {
+            const a = (j / tubeSegs) * TAU;
+            const c = Math.cos(a);
+            const s = Math.sin(a);
+            const nx = c * N2[0] + s * B[0];
+            const ny = c * N2[1] + s * B[1];
+            const nz = c * N2[2] + s * B[2];
+
+            const v = i * tubeSegs + j;
+            positions[v * 3 + 0] = (P[0] + tube * nx) * scale;
+            positions[v * 3 + 1] = (P[1] + tube * ny) * scale;
+            positions[v * 3 + 2] = (P[2] + tube * nz) * scale;
+            normals[v * 3 + 0]   = nx;
+            normals[v * 3 + 1]   = ny;
+            normals[v * 3 + 2]   = nz;
+            uvs[v * 2 + 0]       = i / knotSegs;
+            uvs[v * 2 + 1]       = j / tubeSegs;
+        }
+    }
+
+    // Outward-facing (CCW) winding; both loops wrap via modulo → watertight.
+    for (let i = 0; i < knotSegs; i++) {
+        for (let j = 0; j < tubeSegs; j++) {
+            const a  = i * tubeSegs + j;
+            const b  = ((i + 1) % knotSegs) * tubeSegs + j;
+            const c2 = ((i + 1) % knotSegs) * tubeSegs + ((j + 1) % tubeSegs);
+            const d  = i * tubeSegs + ((j + 1) % tubeSegs);
+            const o  = (i * tubeSegs + j) * 6;
+            indices[o + 0] = a;  indices[o + 1] = d;  indices[o + 2] = b;
+            indices[o + 3] = b;  indices[o + 4] = d;  indices[o + 5] = c2;
+        }
+    }
+
+    return new Geometry(gl, {
+        position: { size: 3, data: positions },
+        normal:   { size: 3, data: normals },
+        uv:       { size: 2, data: uvs },
+        index:    { data: indices },
+    });
+}
+
+/* ------------------------------------------------------------------ */
+/*  Renderer / Camera / Scene                                          */
+/* ------------------------------------------------------------------ */
+const renderer = new Renderer({
+    dpr: Math.min(window.devicePixelRatio || 1, 2),
+    antialias: true,
+});
+const gl = renderer.gl;
+gl.clearColor(0.02, 0.027, 0.059, 1); // #05070f
+document.body.appendChild(gl.canvas);
+
+const camera = new Camera(gl, { fov: 40, near: 0.1, far: 100 });
+const scene = new Transform();
+
+/* ------------------------------------------------------------------ */
+/*  Shaders (view-space lighting, iridescent bands + fresnel rim)      */
+/* ------------------------------------------------------------------ */
+const program = new Program(gl, {
+    vertex: /* glsl */ `
+        attribute vec3 position;
+        attribute vec3 normal;
+        attribute vec2 uv;
+
+        uniform mat4 modelViewMatrix;
+        uniform mat4 projectionMatrix;
+        uniform mat3 normalMatrix;
+
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec2 vUv;
+
+        void main() {
+            vUv = uv;
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vPosition = mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `,
+    fragment: /* glsl */ `
+        precision highp float;
+
+        varying vec3 vNormal;
+        varying vec3 vPosition;
+        varying vec2 vUv;
+
+        uniform vec3 uColorA;
+        uniform vec3 uColorB;
+        uniform vec3 uAccent;
+        uniform vec3 uLightDir;
+
+        void main() {
+            vec3 N = normalize(vNormal);
+            vec3 V = normalize(-vPosition);          // view space → camera at origin
+            vec3 L = normalize(uLightDir);
+            vec3 L2 = normalize(vec3(-0.55, -0.35, 0.4));
+
+            float wrap    = max((dot(N, L)  + 0.35) / 1.35, 0.0);  // soft key light
+            float fill    = max(dot(N, L2), 0.0);
+            float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.6);
+
+            // iridescent banding travelling along the knot's length
+            float band = 0.5 + 0.5 * cos(vUv.x * 18.849 + 1.2);
+            vec3 base  = mix(uColorA, uColorB, band);
+
+            vec3  H         = normalize(L + V);
+            float specular  = pow(max(dot(N, H), 0.0), 90.0);
+
+            vec3 color = base * (0.13 + 0.92 * wrap);
+            color += uColorB * fill * 0.22;
+            color += uAccent * fresnel * 0.85;
+            color += vec3(1.0) * specular * 0.5;
+
+            color = pow(color, vec3(0.92));          // gentle tone curve
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `,
+    uniforms: {
+        uColorA:   { value: new Color('#5a3ee8') },
+        uColorB:   { value: new Color('#17d3c5') },
+        uAccent:   { value: new Color('#ff4fa3') },
+        uLightDir: { value: new Vec3(0.55, 0.8, 0.6) },
+    },
+});
+
+const knot = new Mesh(gl, {
+    geometry: createTorusKnotGeometry(gl),
+    program,
+});
+scene.addChild(knot);
+
+/* ------------------------------------------------------------------ */
+/*  Resize + render loop                                               */
+/* ------------------------------------------------------------------ */
+function resize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    renderer.setSize(width, height);
+    const aspect = width / height;
+    camera.perspective({ aspect });
+    // pull back on narrow viewports so the knot always fills most of the view
+    camera.position.set(0, 0, 7.4 / Math.min(aspect, 1));
+}
+window.addEventListener('resize', resize);
+resize();
+
+requestAnimationFrame(function update(t) {
+    knot.rotation.x = t * 0.00022;
+    knot.rotation.y = t * 0.00036;
+    knot.rotation.z = Math.sin(t * 0.00013) * 0.15;
+    renderer.render({ scene, camera });
+    requestAnimationFrame(update);
+});
+</script>
+</body>
+</html>
