@@ -43,6 +43,11 @@ export function hasClassifier(): boolean {
 	return classifyFn !== null;
 }
 
+/** Clear the backend so wireClassifier can re-wire after a choice change. */
+export function resetClassifyFn(): void {
+	classifyFn = null;
+}
+
 /** Free-skip patterns: high-precision trivial commands. Everything else that
  * looks non-code still goes through Jev — the regex only catches the obvious. */
 const TRIVIAL_RE =

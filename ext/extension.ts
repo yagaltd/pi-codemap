@@ -26,7 +26,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { classifySpan, gateShortlist, gateTriggered, hasClassifier, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
+import { classifySpan, gateShortlist, gateTriggered, hasClassifier, resetClassifyFn, routeFirstPrompt, setClassifyFn, subQueryTerms, systemOne, type GateCandidate } from "./jev.ts";
 import { defaultKeyFile, loadKey, typellmAvailable, typellmClassifyFn, writeKeyFile } from "./typellm.ts";
 import { promptForApiKey } from "./typellm-ui.ts";
 
@@ -445,9 +445,11 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 	};
 	let classifierWired = false;
 	let activeBackend: "jev" | "typellm" | null = null;
+	let choiceSource: "env" | "saved" | null = null;
 	let availJev = false;
 	let availTypellm = false;
 	let onboardedKeyMissing = false;
+	let onboardedChoose = false;
 	/** Failed-search rescue results, cached per query for this session. */
 	const rescueCache = new Map<string, SearchHit[]>();
 
@@ -462,19 +464,24 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		filesIndexed: 0,
 	};
 
-	/** Classifier backend: CODEMAP_CLASSIFIER=jev|typellm|auto (default auto =
-	 * Jev when pi has credentials, else TypeLLM when the key file exists,
-	 * else unwired). First context wins; idempotent. */
+	/** Classifier backend — the USER chooses: CODEMAP_CLASSIFIER env override,
+	 * else the persisted /codemap:classifier choice, else (unset) the single
+	 * usable provider, or Jev + a one-time choose notice when both are usable.
+	 * First context wins; idempotent. */
 	function wireClassifier(ctx: ExtensionContext | undefined): void {
 		if (classifierWired || !ctx) return;
-		const pref = (process.env.CODEMAP_CLASSIFIER ?? "auto").trim().toLowerCase();
+		const envChoice = envClassifier();
+		const saved = savedClassifier();
+		choiceSource = envChoice ? "env" : saved ? "saved" : null;
+		const choice = envChoice ?? saved;
 		const reg = (ctx as unknown as { modelRegistry?: MinimalRegistry }).modelRegistry;
 		availJev = !!(reg && typeof reg.classify === "function");
 		availTypellm = typellmAvailable();
 		const backend: "jev" | "typellm" | null =
-			pref === "typellm" ? (availTypellm ? "typellm" : null)
-			: pref === "jev" ? (availJev ? "jev" : null)
-			: availJev ? "jev" : availTypellm ? "typellm" : null;
+			choice === "typellm" ? (availTypellm ? "typellm" : null)
+			: choice === "jev" ? (availJev ? "jev" : null)
+			: availJev !== availTypellm ? (availJev ? "jev" : "typellm")
+			: availJev ? "jev" : null;
 		if (!backend) return;
 		classifierWired = true;
 		activeBackend = backend;
@@ -494,6 +501,30 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 			return reg.classify(model, { state, questions }) as Promise<never> as never;
 		});
 		moduleWireClassifier = wireClassifier;
+	}
+
+	function classifierFile(): string {
+		return path.join(os.homedir(), ".config", "pi-codemap", "classifier");
+	}
+
+	function savedClassifier(): "jev" | "typellm" | null {
+		try {
+			const v = fs.readFileSync(classifierFile(), "utf8").trim().toLowerCase();
+			return v === "jev" || v === "typellm" ? v : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setSavedClassifier(v: "jev" | "typellm"): void {
+		const p = classifierFile();
+		fs.mkdirSync(path.dirname(p), { recursive: true });
+		fs.writeFileSync(p, v + "\n");
+	}
+
+	function envClassifier(): "jev" | "typellm" | null {
+		const v = (process.env.CODEMAP_CLASSIFIER ?? "").trim().toLowerCase();
+		return v === "jev" || v === "typellm" ? v : null;
 	}
 
 	function jevLog(e: Record<string, unknown>): void {
@@ -529,6 +560,12 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 				ctx.ui.notify(
 					"pi-codemap: classifier idle — no Jev credentials and no TypeLLM key. Set TYPESAFE_API_KEY (or /login with a Jev provider), run /codemap:login-typellm, or set CODEMAP_CLASSIFIER=jev|typellm. Everything else works without it.",
 					"warning",
+				);
+			} else if (available && typellmAvailable() && !envClassifier() && !savedClassifier() && !onboardedChoose) {
+				onboardedChoose = true;
+				ctx.ui.notify(
+					"pi-codemap: both classifiers available (Jev + TypeLLM) — pick one with /codemap:classifier jev|typellm (persisted). Until you choose, Jev serves.",
+					"info",
 				);
 			}
 		}
@@ -768,12 +805,36 @@ export function createCodemapExtension(pi: ExtensionAPI, opts: CodemapOptions): 
 		},
 	});
 
+	pi.registerCommand("codemap:classifier", {
+		description: "Choose the classifier: jev | typellm (persisted). No args = show current.",
+		handler: async (args, ctx) => {
+			const arg = String(args ?? "").trim().toLowerCase();
+			const cmdCtx = ctx as unknown as { hasUI: boolean; ui: { notify(msg: string, level?: "info" | "warning" | "error"): void } };
+			const say = (msg: string) => (cmdCtx.hasUI ? cmdCtx.ui.notify(msg, "info") : console.log(msg));
+			if (arg === "jev" || arg === "typellm") {
+				setSavedClassifier(arg);
+				resetClassifyFn();
+				classifierWired = false;
+				activeBackend = null;
+				wireClassifier(ctx as unknown as ExtensionContext);
+				const eff = envClassifier() && envClassifier() !== arg ? ` (note: CODEMAP_CLASSIFIER=${envClassifier()} overrides for this run)` : "";
+				say(`classifier choice saved: ${arg} — active now: ${activeBackend ?? "none (chosen provider unavailable)"}${eff}`);
+			} else if (arg === "clear") {
+				try { fs.rmSync(classifierFile()); } catch { /* already gone */ }
+				say("classifier choice cleared — unset semantics apply (single provider, else jev + choose notice)");
+			} else {
+				say(`classifier: active=${activeBackend ?? "none"} choice=${choiceSource ?? "unset"} (env=${envClassifier() ?? "-"}, saved=${savedClassifier() ?? "-"}, jev=${availJev ? "ok" : "missing"}, typellm=${availTypellm ? "ok" : "missing"}) — set with: /codemap:classifier jev|typellm`);
+			}
+		},
+	});
+
 	pi.registerCommand("codemap:status", {
 		description: "Show code-map state (files, snapshot, watcher)",
 		handler: async (_args, ctx) => {
 			wireClassifier(ctx as unknown as ExtensionContext);
+			const choiceLabel = choiceSource ?? "unset";
 			const line = st.enabled
-				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · classifier ${activeBackend ?? "none"} (jev ${availJev ? "ok" : "missing"}, typellm ${availTypellm ? "ok" : "missing"})`
+				? `enabled — map ${st.mapPath} (${st.filesIndexed} files) · snapshot ${st.snapshotMeta.estTokens}tok ${st.snapshotMeta.files}f/${st.snapshotMeta.omitted}omitted · watcher ${st.watcher ? `pid ${st.watcher.pid}` : "off"} · dirty ${st.mapDirty} · classifier ${activeBackend ?? "none"} (choice: ${choiceLabel}; jev ${availJev ? "ok" : "missing"}, typellm ${availTypellm ? "ok" : "missing"})`
 				: `disabled — ${st.reason}`;
 			if (ctx.hasUI) ctx.ui.notify(line, "info");
 			else console.log(line);
